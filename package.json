@@ -1,0 +1,33 @@
+{
+  "name": "japyo-socket",
+  "version": "1.0.0",
+  "description": "socket server for japyo",
+  "main": "server.js",
+  "repository": "https://github.com/azad71/japyo-socket.git",
+  "author": "azad71",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "export NODE_ENV=development && nodemon server.js"
+  },
+  "dependencies": {
+    "@socket.io/cluster-adapter": "^0.1.0",
+    "@socket.io/sticky": "^1.0.1",
+    "axios": "^0.25.0",
+    "cors": "^2.8.5",
+    "debug": "^4.3.4",
+    "express": "^4.17.2",
+    "ioredis": "^4.28.2",
+    "knex": "^0.95.15",
+    "morgan": "^1.10.0",
+    "mysql": "^2.18.1",
+    "nodemon": "^3.0.1",
+    "pg": "^8.7.1",
+    "socket.io": "^4.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.8.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.4"
+  }
+}

@@ -1,0 +1,106 @@
+const { io } = require("../app");
+const dbService = require("../service/db.service");
+const Notification = require("../service/notification.service");
+const tag = require("../constants/event.constants");
+
+/**
+ * handles message sending action
+ * @param {{
+ * text: string,
+ * room_id: string
+ * sender_id: number,
+ * receiver_id: number,
+ * sent_at: number
+ * sender_name: string,
+ * sender_image: string
+ * }} payload
+ */
+
+async function MessageSentGp(payload) {
+  try {
+    const { text, activity_id, sender_id, chat_message_type } = payload;
+
+    // console.log(`\nMessageSent Payload ----${JSON.stringify(payload)}`);
+
+    const newMessage = await dbService
+      .table("jp_group_chat_message")
+      .insert({
+        text,
+        sent_at: Date.now(),
+        activity_id,
+        sender_id,
+        status: "sent",
+        chat_message_type,
+        owner: "",
+      })
+      .returning("*");
+
+    const activityInfo = await dbService.select(["*"]).from("jp_activity").where({ activity_id });
+    const activityAttendant = await dbService.select(["user_id"]).from("jp_activity_attendant").where({ activity_id });
+
+    if (!Object.keys(activityInfo).length) {
+      return;
+    }
+
+    activityAttendant.forEach(async (attendant) => {
+      const senderInfo = await dbService.select(["*"]).from("jp_user_online").where({ user_id: attendant.user_id });
+      console.log(senderInfo);
+
+      console.log('senderInfo');
+      console.log(senderInfo[0].socket_id);
+
+      if (activity_id) {
+        if (sender_id === senderInfo[0].user_id) {
+          // Thie user con't send any  notification
+        } else {
+          const notificationService = new Notification();
+
+          const notificationPayload = {
+            title: `${activityInfo[0].title} sent you a message`,
+            body: text,
+            type: "chat_message",
+            fcm_token: senderInfo[0].device_token,
+            sender_image: senderInfo[0].profile_picture,
+            sender_name: senderInfo[0].username,
+            sender_id,
+            multiple: false,
+            chat_message_type: "text",
+            message_id: newMessage[0].single_message_id,
+          };
+
+          notificationService.send(notificationPayload);
+        }
+      }
+
+      const sockets = [];
+      if (senderInfo[0].socket_id) {
+        sockets.push(senderInfo[0].socket_id);
+        console.log('payload');
+        console.log(payload);
+        io.to(sockets).emit(tag.GET_MESSAGE_GP, payload);
+      }
+
+      // console.log({ sockets });
+      const recentMessagePayload = {
+        ...newMessage[0],
+        sender_name: senderInfo[0].username,
+        sender_image: senderInfo[0].profile_picture,
+        sender_id,
+        activity_id,
+        chat_type: "group",
+      };
+
+      if (senderInfo.length && senderInfo[0].socket_id) {
+        sockets.push(senderInfo[0].socket_id);
+      }
+
+      // console.log({ sockets });
+
+      io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
+    });
+  } catch (error) {
+    console.log("\n\nFailed to sent message\n\n", error);
+  }
+}
+
+module.exports = MessageSentGp;

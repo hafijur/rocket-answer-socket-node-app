@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket Chat</title>
+  <style>
+    #messages { list-style-type: none; margin: 0; padding: 0; }
+    #messages li { padding: 5px 10px; }
+  </style>
+</head>
+<body>
+  <h1>Socket Chat</h1>
+  <div id="room-form">
+    <input id="room-input" placeholder="Enter room name" autocomplete="off" />
+    <button id="join-button">Give Conversation Code</button>
+  </div>
+  <div id="chat-area" style="display: none;">
+    <ul id="messages"></ul>
+    <form id="chat-form" action="">
+      <input id="message-input" autocomplete="off" />
+      <button>Send</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Connect to the socket.io server
+    const socket = io();
+
+    // Handle room joining
+    document.getElementById('join-button').addEventListener('click', () => {
+      const roomInput = document.getElementById('room-input');
+      const room = roomInput.value;
+      if (room.trim() !== '') {
+        socket.emit('join room', room);
+        document.getElementById('room-form').style.display = 'none';
+        document.getElementById('chat-area').style.display = 'block';
+      }
+    });
+
+    // Handle incoming chat messages
+    socket.on('chat message', (message) => {
+      const li = document.createElement('li');
+      li.textContent = message.message+ ' - ' + message.room;
+      console.log('message', message);
+      document.getElementById('messages').appendChild(li);
+    });
+
+    // Handle form submission
+    document.getElementById('chat-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+      messageInput.value = '';
+      socket.emit('chat message', { message, room: document.getElementById('room-input').value });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+- emit event on edit activity
