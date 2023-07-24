@@ -17,10 +17,11 @@ const tag = require("../constants/event.constants");
  */
 
 async function MessageSentGp(payload) {
+  // console.log(`\nMessageSent Payload ----`, payload);
   try {
     const { text, activity_id, sender_id, chat_message_type } = payload;
 
-    // console.log(`\nMessageSent Payload ----${JSON.stringify(payload)}`);
+    // console.log(`\nMessageSent Payload ----${payload}`);
 
     const newMessage = await dbService
       .table("jp_group_chat_message")
@@ -32,55 +33,66 @@ async function MessageSentGp(payload) {
         status: "sent",
         chat_message_type,
         owner: "",
-      })
-      .returning("*");
+      });
 
     const activityInfo = await dbService.select(["*"]).from("jp_activity").where({ activity_id });
     const activityAttendant = await dbService.select(["user_id"]).from("jp_activity_attendant").where({ activity_id });
 
+    console.log('attendantList', activityAttendant);
     if (!Object.keys(activityInfo).length) {
       return;
     }
 
     activityAttendant.forEach(async (attendant) => {
-      const senderInfo = await dbService.select(["*"]).from("jp_user_online").where({ user_id: attendant.user_id });
-      console.log(senderInfo);
+      const senderInfo = await dbService.select(["socket_id"])
+        .from("jp_user_online")
+        .where({ user_id: attendant.user_id });
+      console.log("Sender info", senderInfo);
 
-      console.log('senderInfo');
-      console.log(senderInfo[0].socket_id);
+      const baseUser = await dbService.select("*").from("users").where({ id: sender_id });
+      console.log('base user', baseUser);
+      // if (activity_id) {
+      //   // eslint-disable-next-line eqeqeq
+      //   if (sender_id == attendant.user_id) {
+      //     // Thie user con't send any  notification
+      //   } else {
+      //     const notificationService = new Notification();
 
-      if (activity_id) {
-        if (sender_id === senderInfo[0].user_id) {
-          // Thie user con't send any  notification
-        } else {
-          const notificationService = new Notification();
+      //     const notificationPayload = {
+      //       title: `${baseUser[0].profile_name} sent a message in ${activityInfo[0].title}`,
+      //       body: text,
+      //       type: "chat_message",
+      //       activity_id,
+      //       fcm_token: senderInfo[0].device_token,
+      //       sender_image: senderInfo[0].profile_picture,
+      //       sender_name: senderInfo[0].username,
+      //       sender_id,
+      //       multiple: false,
+      //       chat_message_type: "text",
+      //       message_id: newMessage[0].single_message_id,
+      //     };
 
-          const notificationPayload = {
-            title: `${activityInfo[0].title} sent you a message`,
-            body: text,
-            type: "chat_message",
-            fcm_token: senderInfo[0].device_token,
-            sender_image: senderInfo[0].profile_picture,
-            sender_name: senderInfo[0].username,
-            sender_id,
-            multiple: false,
-            chat_message_type: "text",
-            message_id: newMessage[0].single_message_id,
-          };
-
-          notificationService.send(notificationPayload);
-        }
-      }
+      //     notificationService.send(notificationPayload);
+      //   }
+      // }
 
       const sockets = [];
       if (senderInfo[0].socket_id) {
+        // find user_id from senderifo where user_id != sender_id
+        senderInfo.forEach((info) => {
+          // if (info.user_id !== sender_id) {
+          sockets.push(info.socket_id);
+          // }
+        });
+
         sockets.push(senderInfo[0].socket_id);
         console.log('payload');
         console.log(payload);
+        console.log('sockets found', sockets);
         io.to(sockets).emit(tag.GET_MESSAGE_GP, payload);
       }
 
-      // console.log({ sockets });
+      // // console.log({ sockets });
       const recentMessagePayload = {
         ...newMessage[0],
         sender_name: senderInfo[0].username,
@@ -94,7 +106,7 @@ async function MessageSentGp(payload) {
         sockets.push(senderInfo[0].socket_id);
       }
 
-      // console.log({ sockets });
+      // // console.log({ sockets });
 
       io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
     });

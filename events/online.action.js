@@ -14,45 +14,57 @@ const db = require("../service/db.service");
  */
 async function Online(payload) {
   try {
-    // console.log("\nInside online action---\n");
+    // console.log("\nInside online action---\npayload is ", payload);
     payload.online_status = "active";
     payload.last_seen = Date.now();
-    payload.location = `POINT(${payload.longitude} ${payload.latitude})`;
+    // payload.location = `POINT(${payload.longitude} ${payload.latitude})`;
 
-    let foundUser = await dbService.raw(`
-      SELECT juo.user_id
-      FROM jp_user_online juo
-      INNER JOIN jp_base_user jbu
-      ON jbu.user_id = juo.user_id
-      AND jbu.account_status = 'active'
-      WHERE juo.user_id = ${payload.user_id}
-    `);
+    //   let foundUser = await dbService.raw(`
+    //   SELECT *
+    //   FROM jp_user_online
+    //   INNER JOIN users
+    //   ON jp_user_online.user_id = users.id
+    //   WHERE users.id = 2
+    // `);
+    const foundUser = await
+    db.select('jp_user_online.user_id').from('jp_user_online').innerJoin('users', 'jp_user_online.user_id', 'users.id')
+      .where('users.id', payload.user_id);
 
-    foundUser = foundUser.rows;
-
+    // AND jbu.account_status = 'active'
+    // console.log("\nfound user---\n", foundUser);
+    // foundUser = foundUser.rows;
     // console.log("\nuser found on online action---", foundUser, "\n");
-
-    if (Array.isArray(foundUser) && foundUser.length && foundUser[0].user_id === payload.user_id) {
+    // return;
+    if (foundUser.length) {
+    // if (Array.isArray(foundUser) && foundUser.length && foundUser[0].user_id === payload.user_id) {
       // console.log("\nexisting user\n");
       await db
         .table("jp_user_online")
         .update({
-          online_status: payload.online_status,
+          online_status: 'active',
           last_seen: payload.last_seen,
-          location: payload.location,
           socket_id: payload.socket_id,
-          device_token: payload.device_token,
-          latitude: payload.latitude,
-          longitude: payload.longitude,
+          device_token: payload.device_token
         })
-        .where({ user_id: payload.user_id })
-        .andWhere({ account_type: payload.account_type });
+        .where({ user_id: payload.user_id });
     } else {
-      // console.log("\nnew user---\n");
-      await db.table("jp_user_online").insert(payload);
+      // console.log("\nnew user---\n", payload);
+
+      await db.table("jp_user_online").insert({
+        profile_picture: "http://192.168.1.209/roketanswer/storage/file_upload/168967876087091792.png",
+        profile_name: `Rohit ${Math.floor(Math.random() * 1000)}`,
+        online_status: payload.online_status,
+        account_type: payload.account_type,
+        latitude: 0,
+        longitude: 0,
+        user_id: payload.user_id,
+        last_seen: payload.last_seen,
+        socket_id: payload.socket_id,
+        device_token: "niuqXN48ZfUvCp6XAAAD"
+      });
     }
   } catch (error) {
-    console.log("\nFailed to register user\n");
+    console.log("\nFailed to register user\n", error);
   }
 }
 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto-Reply ChatBot</title>
+</head>
+<body>
+  <h1>Auto-Reply ChatBot</h1>
+  <div id="question-area" style="display: none;">
+    <p id="question-text"></p>
+    <input type="text" id="answer-input" />
+    <button onclick="sendAnswer()">Send Answer</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    let params = (new URL(document.location)).searchParams;
+    let user_id = params.get("user_id") ?? 2;
+
+    // Function to show a question on the page
+    function showQuestion(question) {
+      const questionArea = document.getElementById('question-area');
+      const questionText = document.getElementById('question-text');
+      questionText.textContent = question;
+      questionArea.style.display = 'block';
+    }
+
+    // Function to send an answer to the server
+    function sendAnswer() {
+      const questionText = document.getElementById('question-text').textContent;
+      const answerInput = document.getElementById('answer-input');
+      const answer = answerInput.value.trim();
+      if (answer !== '') {
+        socket.emit('answer', { question: questionText, answer });
+        answerInput.value = '';
+      }
+    }
+
+    // Handle incoming questions from the server
+    socket.on('ask question', (question) => {
+      showQuestion(question);
+    });
+
+    // Handle questions completion event
+    socket.on('questions completed', (payload) => {
+      const questionArea = document.getElementById('question-area');
+      questionArea.style.display = 'none';
+      console.log("all answers",payload);
+
+
+      // responses.push(...sessionResponses);
+      const jsonString = JSON.stringify(payload);
+      window.location.href = `/?user_id=${user_id}&questions=${encodeURIComponent(jsonString)}`;
+
+
+
+
+      // alert('All questions have been asked. The session is completed.');
+    });
+
+    // Notify the server when the client is ready to receive questions
+    socket.emit('ready');
+  </script>
+</body>
+</html>

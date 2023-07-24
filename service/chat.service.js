@@ -3,11 +3,15 @@ const { io } = require("../app");
 const actions = require("../events");
 const tag = require("../constants/event.constants");
 
+
+
 io.on(tag.CONNECTION, (socket) => {
-  console.log(`Socket connected on ${socket.id}`);
+  // console.log(`Socket connected on ${socket.id}`);
+
+
 
   socket.on(tag.ONLINE, (payload) => {
-    console.log("USER ONLINE-------", process.pid);
+    // console.log("USER ONLINE-------", process.pid);
 
     socket.user_id = payload.user_id;
     socket.account_type = payload.account_type;
