@@ -51,30 +51,33 @@ async function MessageSentGp(payload) {
 
       const baseUser = await dbService.select("*").from("users").where({ id: sender_id });
       console.log('base user', baseUser);
-      // if (activity_id) {
-      //   // eslint-disable-next-line eqeqeq
-      //   if (sender_id == attendant.user_id) {
-      //     // Thie user con't send any  notification
-      //   } else {
-      //     const notificationService = new Notification();
+      if (activity_id) {
+        // eslint-disable-next-line eqeqeq
+        if (sender_id == attendant.user_id) {
+          // Thie user con't send any  notification
+        } else {
+          const notificationService = new Notification();
 
-      //     const notificationPayload = {
-      //       title: `${baseUser[0].profile_name} sent a message in ${activityInfo[0].title}`,
-      //       body: text,
-      //       type: "chat_message",
-      //       activity_id,
-      //       fcm_token: senderInfo[0].device_token,
-      //       sender_image: senderInfo[0].profile_picture,
-      //       sender_name: senderInfo[0].username,
-      //       sender_id,
-      //       multiple: false,
-      //       chat_message_type: "text",
-      //       message_id: newMessage[0].single_message_id,
-      //     };
+          const notificationPayload = {
+            title: `${baseUser[0].profile_name} sent a message in ${activityInfo[0].title}`,
+            body: text,
+            type: "chat_message",
+            activity_id,
+            fcm_token: senderInfo[0].device_token,
+            // fcm_token: "e6ZWuAylRASM-FcCUPSuJy:APA91bFQe-3nE7tkGf7VOaJfGJg41e2Z8vZp7Uv5fw_tGqBhyZAJmqfO_qNFakV2rI2CvPBoxKdWHv31deGJb0pYVFolpwsxhlhDfIb16Kky3uJ2KVCTqsZ7qAfj-YawNtXjqwIHHQMS", //senderInfo[0].device_token,
+            sender_image: senderInfo[0].profile_picture,
+            sender_name: senderInfo[0].username,
+            sender_id,
+            multiple: false,
+            chat_message_type: "text",
+            message_id: newMessage[0].single_message_id,
+          };
 
-      //     notificationService.send(notificationPayload);
-      //   }
-      // }
+          console.log('working-----------------',notificationPayload);
+
+          notificationService.send(notificationPayload);
+        }
+      }
 
       const sockets = [];
       if (senderInfo[0].socket_id) {

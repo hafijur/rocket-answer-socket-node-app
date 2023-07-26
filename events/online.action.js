@@ -51,7 +51,7 @@ async function Online(payload) {
       // console.log("\nnew user---\n", payload);
 
       await db.table("jp_user_online").insert({
-        profile_picture: "http://192.168.1.209/roketanswer/storage/file_upload/168967876087091792.png",
+        profile_picture: "http://24.199.122.48/roketanswer/storage/file_upload/168967876087091792.png",
         profile_name: `Rohit ${Math.floor(Math.random() * 1000)}`,
         online_status: payload.online_status,
         account_type: payload.account_type,

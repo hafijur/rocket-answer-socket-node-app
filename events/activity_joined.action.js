@@ -133,16 +133,16 @@ async function ActivityJoined(payload) {
     io.to(socket_id).emit('chat_m', chatList);
 
     if (privacy === "private") {
-      io.emit(tag.GET_MESSAGE_GP, {
-        group_message_id: chatList.group_message_id,
-        text: "wants to joined the activity",
-        activity_id: `${activity_id}`,
-        sent_at: `${sent_at}`,
-        sender_id: user_id,
-        chat_message_type: "joinedRequest",
-        profile_name: `${profile_name}`,
-        profile_picture: `${profile_picture}`,
-      });
+      // io.emit(tag.GET_MESSAGE_GP, {
+      //   group_message_id: chatList.group_message_id,
+      //   text: "wants to joined the activity",
+      //   activity_id: `${activity_id}`,
+      //   sent_at: `${sent_at}`,
+      //   sender_id: user_id,
+      //   chat_message_type: "joinedRequest",
+      //   profile_name: `${profile_name}`,
+      //   profile_picture: `${profile_picture}`,
+      // });
     } else if (privacy === "public") {
       io.emit(tag.GET_MESSAGE_GP, {
         group_message_id: chatList.rows[0].group_message_id,

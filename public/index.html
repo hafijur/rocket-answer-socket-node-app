@@ -210,12 +210,19 @@
       // if file added then file upload and send message
       const fileInput = document.getElementById('file-input');
       if (fileInput.files.length > 0) {
+
+        const headers = new Headers();
+        const origin = 'http://137.184.233.220:5005';
+        headers.append('Origin', origin);
+
+
         const file = fileInput.files[0];
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', 'image');
-        fetch('http://192.168.1.209/roketanswer/api/general/file-upload', {
+        fetch('http://24.199.122.48/backend/api/general/file-upload', {
           method: 'POST',
+          headers: headers,
           body: formData,
         })
           .then((response) => response.json())
@@ -241,7 +248,7 @@
             // socket.emit('chat message', { message, room: document.getElementById('room-input').value, file: result.file });
           })
           .catch((error) => {
-            console.error('Error:', error);
+            console.log('Error:', error);
           });
         return;
       }
