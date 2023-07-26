@@ -41,6 +41,7 @@ class Notification {
         notificationPayload,
         { headers: { "Content-Type": "application/json", Authorization: this.token } }
       );
+      console.log(`notification sent to ${fcm_token}\n Token--${this.token}`);
     } catch (error) {
       // console.log(error);
       console.log("Failed to send notification");

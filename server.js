@@ -1,54 +1,38 @@
 const { server, app } = require("./app");
-const { io } = require("./app");
 
 const appConfig = require("./config/app.config");
-const dbService = require("./service/db.service");
+const db = require("./service/db.service");
+const { io } = require("./app");
+const tag = require("./constants/event.constants");
 
 const PORT = process.env.PORT || appConfig.PORT;
 
-// require("./service/socket.service");
+require("./service/socket.service");
 
-// Track the rooms each socket has joined
-const socketRooms = new Map();
-
-// Handle incoming socket connections
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  // Join a room
-  socket.on('join room', (room) => {
-    socket.join(room);
-    socketRooms.set(socket, room);
-    console.log(`User joined room: ${room}`);
-  });
-
-  // Handle incoming chat messages
-  socket.on('chat message', (data) => {
-    console.log('Received message:', data);
-    // Check if the socket has joined a room before broadcasting the message
-    if (socketRooms.has(socket)) {
-      const room = socketRooms.get(socket);
-      console.log(`Broadcasting message to room: ${room}`);
-      io.to(room).emit('chat message', data);
-    }
-  });
-
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
-    // Remove the socket's room mapping
-    if (socketRooms.has(socket)) {
-      socketRooms.delete(socket);
-    }
+// app.use(app.urlencoded({ extended: true }));
+app.get("/test", async (req, res) => {
+  db.select('*').from('users').then((data) => {
+    console.log(data);
+    res.json(data);
+  }).catch((err) => {
+    console.log(err);
+    res.json({
+      message: 'Database Connection error'
+    });
   });
 });
 
-app.get("/test", async (req, res) => {
-  const message = "testing";
-  return res.json({
-    status: true,
-    message,
-  });
+app.post("/create_activity", async (req, res) => {
+  const ac = await db
+    .table("jp_activity")
+    .insert({
+      title: req.body.title,
+      description: req.body.description,
+      question_answers: req.body.questions
+    });
+  io.emit(tag.SESSIONS);
+  console.log("request body", req.body.description);
+  res.json(ac);
 });
 
 server.listen(PORT, () => {

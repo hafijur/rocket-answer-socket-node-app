@@ -37,30 +37,39 @@ async function FileUploadedGp(payload) {
   const sockets = [];
   const receiverInfo = {};
 
+  console.log('sender_id :- ', sender_id);
+
   attendantList.forEach(async (list) => {
     const userOnline = await dbService.select("*").from("jp_user_online").where({ user_id: list.user_id });
-    const baseUser = await dbService.select("*").from("jp_base_user").where({ user_id: list.user_id });
+    const baseUser = await dbService.select("*").from("jp_base_user").where({ user_id: sender_id });
 
-    if (userOnline.socket_id && userOnline.socket_id.length) {
-      sockets.push(userOnline.socket_id);
+    console.log('userOnline :-', userOnline[0]);
+
+    if (userOnline[0].socket_id && userOnline[0].socket_id.length) {
+      sockets.push(userOnline[0].socket_id);
     }
-    if (baseUser.user_id) {
-      receiverInfo.receiver_name = baseUser.profile_name;
-      receiverInfo.receiver_image = baseUser.profile_picture;
-      if (baseUser.send_notification) {
-        const notificationService = new Notification();
-        notificationService.send({
-          fcm_token: userOnline.device_token,
-          type: "group_chat_message",
-          title: `${activityInfo.title} sent you new file `,
-          body: "1 new message",
-          sender_id: chatMessage[0].sender_id,
-          sender_image: activityInfo.icon,
-          sender_name: activityInfo.title,
-          message_id: chatMessage[0].group_message_id,
-          chat_message_type: "file",
-        });
-      }
+    // eslint-disable-next-line eqeqeq
+    if (list.user_id == sender_id) {
+      //
+    } else {
+      const notificationService = new Notification();
+      const notificationPayload = {
+        title: `${baseUser[0].profile_name} sent a image in ${activityInfo[0].title}`,
+        body: "1 new message",
+        type: "chat_message",
+        activity_id,
+        fcm_token: userOnline[0].device_token,
+        sender_image: activityInfo[0].icon,
+        sender_name: activityInfo[0].title,
+        sender_id: chatMessage[0].sender_id,
+        multiple: false,
+        chat_message_type: "file",
+        message_id: chatMessage[0].group_message_id,
+      };
+
+      console.log('notificationPayload :-', notificationPayload);
+
+      notificationService.send(notificationPayload);
     }
   });
 

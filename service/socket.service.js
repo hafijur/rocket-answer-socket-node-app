@@ -3,15 +3,123 @@ const { io } = require("../app");
 const actions = require("../events");
 const tag = require("../constants/event.constants");
 
+const socketRooms = new Map();
+const sessions = new Map();
 // const chatcicle = {};
+const questions = [
+  'What is your name?',
+  'How old are you?'
+];
 
 io.on(tag.CONNECTION, (socket) => {
   // console.log(socket);
-  console.log(`Socket connected on ${socket.id}`);
+  // console.log(`Socket connected on ${socket.id}`);
+  actions.GetSessions();
+
+  let connection = 0;
+
+  /** ********************
+  * start of new code
+  *********************** */
+  console.log('A user connected');
+
+  // Function to ask a question to the client
+  // Function to ask a question to the client
+  function askQuestion(index) {
+    if (index >= questions.length) {
+      // All questions have been asked
+      const session = sessions.get(socket.id);
+      if (session) {
+        const responses = questions.map((question, i) => ({
+          question,
+          answer: session.answers[i].answer
+        }));
+        io.to(socket.id).emit('questions completed', responses);
+        // Close the session and remove session data
+        socket.disconnect(true);
+        sessions.delete(socket.id);
+      }
+      return;
+    }
+
+    const question = questions[index];
+    io.to(socket.id).emit('ask question', question);
+  }
+
+  // Start asking questions when the client is ready
+  socket.on('ready', () => {
+    // Initialize session data for the client
+    sessions.set(socket.id, { answers: [], currentIndex: 0 });
+
+    askQuestion(0);
+  });
+
+  // Handle client's answers
+  socket.on('answer', (answer) => {
+    const session = sessions.get(socket.id);
+    if (session) {
+      session.answers.push(answer);
+      const nextIndex = session.currentIndex + 1;
+      session.currentIndex = nextIndex;
+
+      if (nextIndex >= questions.length) {
+        // All questions have been answered
+        askQuestion(nextIndex); // This will emit "questions completed" event
+      } else {
+        // Ask the next question
+        askQuestion(nextIndex);
+      }
+    }
+  });
+
+  // Join a room
+  socket.on('join room', (room) => {
+    socket.join(room);
+    socketRooms.set(socket, room);
+    console.log(`User joined room: ${room}`);
+    actions.MyMessage({ conversation_activity_idid: 1 });
+    // actions.MyMessage(room);
+  });
+
+  // Handle incoming chat messages
+  socket.on('chat message', (data) => {
+    // eslint-disable-next-line no-plusplus
+    connection++;
+    console.log('Received message:', data);
+    // Check if the socket has joined a room before broadcasting the message
+    if (socketRooms.has(socket)) {
+      const room = socketRooms.get(socket);
+      console.log(`Broadcasting message to room: ${room}`);
+
+      io.to(room).emit('chat message', data);
+    }
+    // console.log(`Total connections: ${connection}`);
+  });
+
+  // on typing
+
+  socket.on(`typing`, (data) => {
+    // eslint-disable-next-line no-plusplus
+
+    console.log('typing:', data);
+    // Check if the socket has joined a room before broadcasting the message
+    if (socketRooms.has(socket)) {
+      const room = socketRooms.get(socket);
+      console.log(`Broadcasting message to room: ${room}`);
+      io.to(room).emit(`typing`, data);
+    }
+    console.log(`Total connections: ${connection}`);
+  });
+
+  /** ********************
+  * end of new code
+  *********************** */
 
   socket.on(tag.ONLINE, (payload) => {
     // console.log("\nUSER ONLINE------- payload: ", payload, "\n");
     // console.log("\nUSER ONLINE-------  ", payload.user_id, "\n");
+
+    // console.log('user online', payload);
 
     socket.user_id = payload.user_id;
     socket.account_type = payload.account_type;
@@ -61,10 +169,14 @@ io.on(tag.CONNECTION, (socket) => {
     }
   });
 
+  socket.on(tag.SESSIONS, async (payload) => {
+    actions.GetSessions(payload);
+  });
+
   socket.on(tag.ACTIVITY_JOINED, (payload) => {
     // console.log('ACTIVITY_JOINED');
     // console.log(`\nCaught ${tag.ACTIVITY_JOINED} event with payload: ${JSON.stringify(payload)}\n`);
-    // console.log(`socket_id: ${socket.id}, userData: ${JSON.stringify(socket.userData)}`);
+    console.log(`socket_id: ${socket.id}, userData: ${JSON.stringify(socket.userData)}`);
 
     actions.ActivityJoined(payload);
   });
@@ -122,7 +234,7 @@ io.on(tag.CONNECTION, (socket) => {
     //   `Message sent from user_id:${payload.sender_id} to user_id:${payload.receiver_id} at:${payload.sent_at
     //   } socket_id ${socket.id} userData: ${JSON.stringify(socket.userData)}`
     // );
-    // console.log(`\nCaught ${tag.MESSAGE_SENT} event with payload: ${JSON.stringify(payload)}\n`);
+    console.log(`\nCaught ${tag.MESSAGE_SENT} event with payload: ${JSON.stringify(payload)}\n`);
 
     actions.MessageSent(payload);
   });
@@ -135,6 +247,10 @@ io.on(tag.CONNECTION, (socket) => {
     // console.log(`\nCaught ${tag.MESSAGE_SENT} event with payload: ${JSON.stringify(payload)}\n`);
 
     actions.MessageSentGp(payload);
+  });
+
+  io.on(tag.GET_MESSAGE, (payload) => {
+    console.log('GET_MESSAGE listening: ', payload);
   });
 
   socket.on(tag.SET_MESSAGE_GP, (payload) => {
@@ -196,13 +312,13 @@ io.on(tag.CONNECTION, (socket) => {
 
   socket.on(tag.DISCONNECT, () => {
     console.log("\nUser disconnected--- user_id:", socket.user_id, " socket_id:", socket.id, "\n");
-    actions.Disconnect({ user_id: socket.user_id, account_type: socket.account_type });
+    actions.Disconnect({ user_id: socket.user_id, account_type: 'personal' });
     io.emit(tag.USER_LEFT, socket.userData);
     io.emit(tag.USER_OFFLINE, {
       user_id: socket.user_id,
       account_type: socket.account_type,
       last_seen: Date.now(),
-      online_status: "deactive",
+      online_status: "inactive",
     });
   });
 });

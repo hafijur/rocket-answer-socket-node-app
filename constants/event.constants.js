@@ -43,4 +43,7 @@ module.exports = {
   SET_REMOVE_JOIN_REQUEST: "set_remove_join_request",
   GET_REMOVE_JOIN_REQUEST: "get_remove_join_request",
   USER_ACCEPT_JOIN_REQUEST: 'user_accept_join_request',
+  // next line is for testing,
+  START_CONVERSATION_BY_CONVERSATION_CODE: "start_conversation_by_conversation_code",
+  SESSIONS: "sessions",
 };

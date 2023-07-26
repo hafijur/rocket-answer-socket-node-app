@@ -16,7 +16,8 @@
   <div id="chat-area" style="display: none;">
     <ul id="messages"></ul>
     <form id="chat-form" action="">
-      <input id="message-input" autocomplete="off" />
+      <input type="file" id="file-input" name="file-input" />
+      <input id="message-input" autocomplete="off" oninput="onTyping()"/>
       <button>Send</button>
     </form>
   </div>
@@ -26,23 +27,177 @@
     // Connect to the socket.io server
     const socket = io();
 
+    let params = (new URL(document.location)).searchParams;
+    let user_id = params.get("user_id") ?? 2;
+    let receiver_id = params.get("receiver_id") ?? 2;
+    let questions = params.get("questions") ?? null;
+    let activity_id = params.get("activity_id") ?? null;
+    console.log("questions",JSON.parse(questions));
+
+
+    function createActivity(data) {
+
+      if (questions !== null) {
+
+
+        fetch('/create_activity', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(result => {
+          // Handle the server response, if needed
+          console.log('Success:', result);
+          // Optionally, you can redirect the user to another page
+          window.location.href = '/?user_id=2&activity_id='+result[0]; // Redirect to the home page
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      }
+    }
+
+    // if user_id and questions parameter added then create activity event call and activity 
+    // join call and start chating with this activity id
+
+    if (user_id && activity_id) {
+      socket.emit('activity_joined', {
+          activity_id: activity_id,
+          status: 'join',
+          user_id: user_id,
+          user_type: 'customer',
+          socket_id: socket.id,
+        });
+      
+      document.getElementById('room-form').style.display = 'none';
+      document.getElementById('chat-area').style.display = 'block';
+    }
+      
+
+    if(user_id && questions) {
+
+      const answers = JSON.parse(questions);
+      // console.log("answers",answers);
+      let des = "";
+      answers.forEach((answer, index) => {
+        // last index check
+        if (index === answers.length - 1) {
+          des += `${answer.answer}`;
+          
+        }else{
+          des += `${answer.answer} , `;
+        }
+      });
+
+
+      createActivity({
+        title: 'Looking for good family Lawyer',
+        description: des,
+        questions: questions ,
+
+      });
+
+    }
+
+    function onTyping() {
+      // console.log('typing');
+      // const roomInput = document.getElementById('room-input');
+      // const room = roomInput.value;
+      // socket.emit('typing', document.getElementById('message-input').value);
+    }
     // Handle room joining
     document.getElementById('join-button').addEventListener('click', () => {
       const roomInput = document.getElementById('room-input');
       const room = roomInput.value;
       if (room.trim() !== '') {
-        socket.emit('join room', room);
+        // socket.emit('join room', room);
+        socket.emit('activity_joined', {
+          activity_id: room,
+          status: 'join',
+          user_id: user_id,
+          socket_id: socket.id,
+        });
         document.getElementById('room-form').style.display = 'none';
         document.getElementById('chat-area').style.display = 'block';
       }
     });
 
-    // Handle incoming chat messages
-    socket.on('chat message', (message) => {
+
+    socket.on('connect', () => {
+      console.log('Connected to the server.');
+        socket.emit('online', { 
+          user_id: user_id, 
+          account_type: 'personal', 
+          socket_id: socket.id,
+          last_seen: new Date(),
+          device_token :"zkbiaR8bI-2u_cAFAAAD",
+
+      });
+    });
+
+    socket.on('disconnect', (message) => {
+      console.log('Disconnected from the server.', message);
+      // io.emit('disconnect', message);
+    });
+
+    socket.on('user_joined', (message) => {
+
+      console.log('user joined message', message);
+    });
+
+    socket.on('sessions', (message) => {
+
+      console.log('sessions', message);
+    });
+
+    // socket.on('get_message', (message) => {
+    //   console.log('Get message from socket ', message);
+    // });
+
+    socket.on('activity_joined', (message) => {
+      io.emit('get_message', {
+        activity_id: message.activity_id,
+        socket_id: socket.id,
+      });
+      console.log('user joined message', message);
+    });
+
+    socket.on('get_message_gp', (message) => {
+      console.log('get group Message', message);
       const li = document.createElement('li');
-      li.textContent = message.message+ ' - ' + message.room;
-      console.log('message', message);
+      li.textContent = message.text+ ' - ' + message.activity_id;
+
       document.getElementById('messages').appendChild(li);
+    });
+
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from the server.');
+    });
+    // Handle incoming chat messages
+    // socket.on('chat message', (message) => {
+    //   const li = document.createElement('li');
+    //   li.textContent = message.message+ ' - ' + message.room;
+    //   console.log('chat message', message);
+    //   document.getElementById('messages').appendChild(li);
+    // });
+
+    socket.on('recent_chat', (message) => {
+      console.log('recent_chat message', message);
+    
+    });
+
+    socket.on('notify_activity_join', (message) => {
+      console.log('notify_activity_join', message);
+    
+    });
+
+    socket.on('chat_m', (message) => {
+
+      console.log('chat_m message', message);
     });
 
     // Handle form submission
@@ -51,7 +206,74 @@
       const messageInput = document.getElementById('message-input');
       const message = messageInput.value;
       messageInput.value = '';
-      socket.emit('chat message', { message, room: document.getElementById('room-input').value });
+
+      // if file added then file upload and send message
+      const fileInput = document.getElementById('file-input');
+      if (fileInput.files.length > 0) {
+
+        const headers = new Headers();
+        const origin = 'http://137.184.233.220:5005';
+        headers.append('Origin', origin);
+
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        fetch('http://24.199.122.48/backend/api/general/file-upload', {
+          method: 'POST',
+          headers: headers,
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((result) => {
+            console.log('Success:', result);
+
+            // clear file input
+            fileInput.value = '';
+
+
+            if(result.status == true) {
+              socket.emit('message_sent_gp', {
+                text: result.data.file_url, 
+                activity_id: activity_id ?? document.getElementById('room-input').value, 
+                sender_id: user_id,
+                socket_id: socket.id,
+                chat_message_type: 'image',
+              });
+            }
+
+
+
+            // socket.emit('chat message', { message, room: document.getElementById('room-input').value, file: result.file });
+          })
+          .catch((error) => {
+            console.log('Error:', error);
+          });
+        return;
+      }
+
+
+      // socket.emit('chat message', { message, room: document.getElementById('room-input').value });
+
+      socket.emit('message_sent_gp', {
+        text: message, 
+        activity_id: activity_id ?? document.getElementById('room-input').value, 
+        sender_id: user_id,
+        user_type: 'customer',
+        socket_id: socket.id,
+      });
+
+      // socket.emit('message_sent', 
+      // { 
+      //   text: message,
+      //   room_id: document.getElementById('room-input').value,
+      //   sender_id: user_id,
+      //   receiver_id: receiver_id,
+      //   sender_name: 'Hafij '+Math.floor(Math.random() * 10),
+      //   sender_image: "http://192.168.1.209/roketanswer/storage/file_upload/168967876087091792.png"
+      // });
+      
     });
   </script>
 </body>

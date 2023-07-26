@@ -2,6 +2,6 @@ module.exports = {
   PORT: 5005,
   NOTIFICATION_URL: "https://fcm.googleapis.com/fcm/send",
   NOTIFICATION_TOKEN:
-    "key=AAAAC8V_sRk:APA91bFlklrGB8W83xE_X83sQgjypK0NBS4aRvHU7i2gT5iPpR44RzKAw2BfNoyfaKrvvdFDHmmiBWa0YD8-GYUkAQoLDB3aBr1t_ikAsMlmwPRIxfeKLEj0tPVi76GcpiF-cxL_djN4",
+    "key=AAAAUW_Uf9A:APA91bEaFxcMpmfTvBpnZJ1uRvOGxuhhOTqeeLDHFeSFmLQ6oA343W27K6St-_JmjG7R2GgAENGDOBI-iH3qaJa0RVUqNY6IQj55N3JUg43tk7qpiQHiNCVNzNgrbUtrO8HnmNg7HmY5",
   ACTIVITY_DURATION: 1000 * 60 * 15,
 };

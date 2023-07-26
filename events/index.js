@@ -16,6 +16,8 @@ const MessageViewedGp = require("./message_viewed_gp.action");
 const FileUploaded = require("./file_uploaded.action");
 const FileUploadedGp = require("./file_uploaded_gp.action");
 const UserAcceptJoinRequest = require("./user_accept_join_request.action");
+const MyMessage = require("./my_message.action");
+const GetSessions = require("./get_sessions.action");
 
 module.exports = {
   Online,
@@ -36,4 +38,6 @@ module.exports = {
   FileUploaded,
   FileUploadedGp,
   UserAcceptJoinRequest,
+  MyMessage,
+  GetSessions
 };

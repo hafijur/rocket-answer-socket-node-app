@@ -1,11 +1,19 @@
 const express = require("express");
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const http = require("http");
 const morgan = require("morgan");
 const { Server } = require("socket.io");
- 
+
+const corsOptions = {
+  origin: '*', // Replace with the allowed client domain
+};
 const app = express();
 const server = http.createServer(app);
-
+app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 // Serve static files from the public directory
 app.use(express.static('public'));
 

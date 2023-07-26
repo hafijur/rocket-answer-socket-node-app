@@ -17,77 +17,132 @@ const db = require("../service/db.service");
 
 async function ActivityJoined(payload) {
   // console.log(`\nInside ActivityJoined action ---`, payload, "\n");
-  let { recent_attendants, joined_user_image, activity_id, privacy, status, join_count, user_id, profile_picture, profile_name } = payload;
+  let { recent_attendants = [],
+    joined_user_image,
+    activity_id,
+    user_type,
+    privacy = "private",
+    status = "join",
+    join_count,
+    user_id,
+    profile_picture = "",
+    profile_name,
+    socket_id,
+  } = payload;
 
   const sent_at = Date.now();
 
-  const activityInfo = await db.raw(
-    `
-    SELECT *
-    FROM jp_activity jaa
-    WHERE jaa.activity_id = ?
-  `,
-    [activity_id]
-  );
-  const activityPrivacy = activityInfo.rows[0].privacy;
-  console.log(activityPrivacy);
+  const activityInfo = await db.select('*').from('jp_activity').where('activity_id', activity_id);
+  // console.log("------------------Activity Info--------------------------", activityInfo[0].title);
+  if (!activityInfo || activityInfo[0].is_closed) {
+    return;
+  }
+  if (user_id == null) {
+    Error('user_id is null');
+  }
+  // console.log("Activity Info", activityInfo);
 
   if (status === "join") {
     // console.log(`\nuser joining in ActivityJoined action\n`);
+    await db
+      .table("jp_activity")
+      .update({
+        expert_id: user_type === "expert" ? user_id : activityInfo[0].expert_id,
+        customer_id: user_type === "customer" ? user_id : activityInfo[0].customer_id,
+
+      })
+      .where("activity_id", activity_id);
     if (recent_attendants.length > 2) {
       recent_attendants.pop();
     }
 
-    if (privacy === 'public') {
+    const $data = await db.select('*').from('jp_activity_attendant')
+      .where('activity_id', activity_id)
+      .where('user_id', user_id);
+
+    console.log("Activity Info------------------------", activityInfo[0].title);
+    if (!$data.length) {
       await db
-        .table("jp_group_chat_message")
+        .table("jp_activity_attendant")
         .insert({
-          text: "has joined the activity",
-          sent_at: `${sent_at}`,
           activity_id,
-          sender_id: user_id,
-          status: "sent",
-          chat_message_type: "joined",
-          owner: "",
-        })
-        .returning("*");
-    } else if (privacy === 'private') {
-      await db
-        .table("jp_group_chat_message")
-        .insert({
-          text: "wants to joined the activity",
-          sent_at: `${sent_at}`,
-          activity_id,
-          sender_id: user_id,
-          status: "sent",
-          chat_message_type: "joinedRequest",
-          owner: "",
-        })
-        .returning("*");
+          user_id,
+          accepted: 1,
+          icon_url: profile_picture,
+          version: 1,
+
+        });
     }
 
-    const chatList = await db.raw(
-      `
-      SELECT *
-      FROM jp_group_chat_message jaa
-      WHERE jaa.activity_id = ?
-      AND jaa.sender_id = ?
-      ORDER BY group_message_id DESC LIMIT 1
-    `,
-      [activity_id, user_id]
-    );
+    if (privacy === 'public') {
+      // await db
+      //   .table("jp_group_chat_message")
+      //   .insert({
+      //     text: "has joined the activity",
+      //     sent_at: `${sent_at}`,
+      //     activity_id,
+      //     sender_id: user_id,
+      //     status: "sent",
+      //     chat_message_type: "joined",
+      //     owner: "",
+      //   })
+      //   .returning("*");
+    } else if (privacy === 'private') {
+      // await db
+      //   .table("jp_group_chat_message")
+      //   .insert({
+      //     text: "wants to joined the activity",
+      //     sent_at: `${sent_at}`,
+      //     activity_id,
+      //     sender_id: user_id,
+      //     status: "sent",
+      //     chat_message_type: "joinedRequest",
+      //     owner: "",
+      //   })
+      //   .returning("*");
+      // await db
+      // .table("conversation_details")
+      // .insert({
+      //   text: "wants to joined the activity",
+      //   sent_at: `${sent_at}`,
+      //   activity_id,
+      //   sender_id: user_id,
+      //   status: "sent",
+      //   chat_message_type: "joinedRequest",
+      //   owner: "",
+      // })
+      // .returning("*");
+    }
+    // const chatList = await db.raw(
+    //   `
+    //   SELECT *
+    //   FROM jp_group_chat_message jaa
+    //   WHERE jaa.activity_id = ?
+    //   AND jaa.sender_id = ?
+    //   ORDER BY group_message_id DESC LIMIT 1
+    // `,
+    //   [activity_id, user_id]
+    // );
+    const chatList = await db.select('*')
+      .from('jp_group_chat_message')
+      .where('activity_id', activity_id)
+      .orderBy('group_message_id', 'desc')
+      .orderBy('group_message_id', 'desc');
+    // console.log("Chat List", chatList);
+
+    io.to(socket_id).emit('chat_m', chatList);
 
     if (privacy === "private") {
-      io.emit(tag.GET_MESSAGE_GP, {
-        group_message_id: chatList.rows[0].group_message_id,
-        text: "wants to joined the activity",
-        activity_id: `${activity_id}`,
-        sent_at: `${sent_at}`,
-        sender_id: user_id,
-        chat_message_type: "joinedRequest",
-        profile_name: `${profile_name}`,
-        profile_picture: `${profile_picture}`,
-      });
+      // io.emit(tag.GET_MESSAGE_GP, {
+      //   group_message_id: chatList.group_message_id,
+      //   text: "wants to joined the activity",
+      //   activity_id: `${activity_id}`,
+      //   sent_at: `${sent_at}`,
+      //   sender_id: user_id,
+      //   chat_message_type: "joinedRequest",
+      //   profile_name: `${profile_name}`,
+      //   profile_picture: `${profile_picture}`,
+      // });
     } else if (privacy === "public") {
       io.emit(tag.GET_MESSAGE_GP, {
         group_message_id: chatList.rows[0].group_message_id,
@@ -107,7 +162,7 @@ async function ActivityJoined(payload) {
     // console.log(
     //   `\nRecent attendants inside ActivityJoined ${status}--- ${recent_attendants}, and join count ${join_count}\n`
     // );
-  } else if (status === "leave") {
+  } if (status === "leave") {
     // console.log(`\nuser leaving in ActivityJoined action\n`);
 
     if (recent_attendants.includes(joined_user_image)) {

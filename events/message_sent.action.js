@@ -18,7 +18,7 @@ const tag = require("../constants/event.constants");
 
 async function MessageSent(payload) {
   try {
-    const { text, sender_id, receiver_id, sent_at, sender_name, sender_image, room_id } = payload;
+    const { text, sender_id, receiver_id, sender_name, sender_image, room_id } = payload;
 
     // console.log(`\nMessageSent Payload ----${JSON.stringify(payload)}`);
 
@@ -33,63 +33,71 @@ async function MessageSent(payload) {
         text,
         sender_id,
         receiver_id,
-        sent_at,
+        sent_at: Date.now(),
         received_at: 0,
         status: "sent",
         room_id: room_id || "",
-      })
-      .returning("*");
+      });
+      // .returning("*");
 
     // console.log({ newMessage });
 
-    const foundUser = await dbService.raw(`
-      SELECT 
-        juo.device_token, socket_id, online_status, juo.profile_picture, juo.profile_name, send_notification
-      FROM
-        jp_user_online juo
-      INNER JOIN
-        jp_base_user jbu
-      ON
-        jbu.user_id = juo.user_id
-      AND
-        jbu.account_status = 'active'
+    // const foundUser = await dbService.raw(`
+    //   SELECT 
+    //     juo.device_token, socket_id, online_status, juo.profile_picture, juo.profile_name
+    //   FROM
+    //     jp_user_online juo
+    //   INNER JOIN
+    //     users jbu
+    //   ON
+    //     jbu.id = juo.user_id
+    //   AND
+    //     jbu.account_status = 'active'
 
-      WHERE
-        juo.user_id = ${receiver_id}
-    `);
+    //   WHERE
+    //     juo.user_id = ${receiver_id}
+    // `);
+    const foundUser = await dbService.select(["*"])
+      .from("jp_user_online")
+      .innerJoin("users", "users.id", "jp_user_online.user_id")
+      .where({ "jp_user_online.user_id": receiver_id, "users.account_status": "active" });
 
-    const receiverInfo = foundUser.rows[0];
 
-    // console.log(receiverInfo);
+    // console.log("Message sent -> found user", foundUser);
+
+    const receiverInfo = foundUser[0];
+
+    // console.log("reciever info", receiverInfo);
 
     if (!Object.keys(receiverInfo).length) {
+      console.log('no receiver info');
       return;
     }
 
-    if (receiverInfo.send_notification) {
-      const notificationService = new Notification();
+    // if (receiverInfo.send_notification) {
+    //   const notificationService = new Notification();
 
-      const notificationPayload = {
-        title: `${sender_name} sent you a message`,
-        body: text,
-        type: "chat_message",
-        fcm_token: receiverInfo.device_token,
-        sender_image,
-        sender_name,
-        sender_id,
-        multiple: false,
-        chat_message_type: "text",
-        message_id: newMessage[0].single_message_id,
-      };
+    //   const notificationPayload = {
+    //     title: `${sender_name} sent you a message`,
+    //     body: text,
+    //     type: "chat_message",
+    //     fcm_token: receiverInfo.device_token,
+    //     sender_image,
+    //     sender_name,
+    //     sender_id,
+    //     multiple: false,
+    //     chat_message_type: "text",
+    //     message_id: newMessage[0].single_message_id,
+    //   };
 
-      notificationService.send(notificationPayload);
-    }
+    //   notificationService.send(notificationPayload);
+    // }
 
     const sockets = [];
-
+    console.log('recieverInfo socket', receiverInfo.socket_id);
     if (receiverInfo.socket_id) {
       sockets.push(receiverInfo.socket_id);
-
+      console.log('inside sockets', sockets);
       io.to(sockets).emit(tag.GET_MESSAGE, payload);
     }
     // console.log({ sockets });
