@@ -50,6 +50,11 @@
         .then(response => response.json())
         .then(result => {
           // Handle the server response, if needed
+          socket.emit('activity_created',{
+            title: data?.title,
+            description: data.description,
+            topic:'expert'
+          });
           console.log('Success:', result);
           // Optionally, you can redirect the user to another page
           window.location.href = '/?user_id=2&activity_id='+result[0]; // Redirect to the home page
@@ -126,6 +131,9 @@
     });
 
 
+  
+
+
     socket.on('connect', () => {
       console.log('Connected to the server.');
         socket.emit('online', { 
@@ -136,6 +144,11 @@
           device_token :"zkbiaR8bI-2u_cAFAAAD",
 
       });
+      // socket.emit('activity_created',{
+      //       title: 'New request added',
+      //       description: 'please reply this ',
+      //       topic:'expert'
+      //     });
     });
 
     socket.on('disconnect', (message) => {
@@ -152,6 +165,11 @@
 
       console.log('sessions', message);
     });
+
+
+    socket.on('notify_activity',(message) => {
+      console.log('notify activity created------',message);
+    })
 
     // socket.on('get_message', (message) => {
     //   console.log('Get message from socket ', message);

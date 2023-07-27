@@ -41,12 +41,50 @@ class Notification {
         notificationPayload,
         { headers: { "Content-Type": "application/json", Authorization: this.token } }
       );
-      console.log(`notification sent to ${fcm_token}\n Token--${this.token}`);
+      // console.log(`notification sent to ${fcm_token}\n Token--${this.token}`);
     } catch (error) {
       // console.log(error);
       console.log("Failed to send notification");
     }
   }
+
+  async sendTopicNotificaion(payload) {
+    try {
+      const { topic, title, body } = payload;
+
+      const notification = {
+        title,
+        body,
+      };
+
+      delete payload.fcm_token;
+      delete payload.multiple;
+
+      const notificationPayload = {
+        data: payload,
+        notification,
+        direct_boot_ok: true,
+        android: {
+          priority: "high",
+        },
+      };
+
+      notificationPayload.to = `/topics/${topic}`;
+
+      // console.log('hitting notificaiton ',notificationPayload);
+
+      await axios.post(
+        this.baseurl,
+
+        notificationPayload,
+        { headers: { "Content-Type": "application/json", Authorization: this.token } }
+      );
+    } catch (error) {
+      // console.log(error);
+      console.log("Failed to send notification",error);
+    }
+  }
+
 }
 
 module.exports = Notification;

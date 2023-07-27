@@ -2,6 +2,7 @@ const { io } = require("../app");
 
 const actions = require("../events");
 const tag = require("../constants/event.constants");
+const Notification = require('./notification.service');
 
 const socketRooms = new Map();
 const sessions = new Map();
@@ -156,17 +157,35 @@ io.on(tag.CONNECTION, (socket) => {
   });
 
   socket.on(tag.ACTIVITY_CREATED, async (payload) => {
+
+    console.log('activity created payload--------------------',payload);
+
+    const notificationService = new Notification();
+
+    const notificationPayload = {
+      title: payload.title,
+      body: payload.description,
+      topic:payload.topic,
+      type: "notify_new_request",
+
+    };
+
+    notificationService.sendTopicNotificaion(notificationPayload);
+
+    io.emit(tag.NOTIFY_ACTIVITY, payload);
+
+
     // console.log(`\nCaught ${tag.ACTIVITY_CREATED} event with payload: ${JSON.stringify(payload)}\n`);
 
-    const activity = await actions.GetActivityInfo(payload, socket.user_id);
+    // const activity = await actions.GetActivityInfo(payload, socket.user_id);
     // console.log("activity : ");
     // console.log(activity);
 
-    if (activity.length) {
-      // console.log(`\nEmitting ${tag.NOTIFY_ACTIVITY} with payload ${JSON.stringify(activity[0])}\n`);
+    // if (activity.length) {
+    //   // console.log(`\nEmitting ${tag.NOTIFY_ACTIVITY} with payload ${JSON.stringify(activity[0])}\n`);
 
-      io.emit(tag.NOTIFY_ACTIVITY, activity[0]);
-    }
+    //   io.emit(tag.NOTIFY_ACTIVITY, activity[0]);
+    // }
   });
 
   socket.on(tag.SESSIONS, async (payload) => {
