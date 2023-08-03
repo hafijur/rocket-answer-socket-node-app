@@ -55,7 +55,7 @@ async function MessageViewed(payload) {
       io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
     }
   } catch (error) {
-    console.log("Failed to update message status");
+    console.log("Message view = Failed to update message status",error);
   }
 }
 

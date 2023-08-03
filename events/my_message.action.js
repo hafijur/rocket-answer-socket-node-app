@@ -22,7 +22,7 @@ async function MyMessage(payload) {
       // io.emit('chat_m', users);
     }
   } catch (error) {
-    console.log("Failed to update message status");
+    console.log("My message =Failed to update message status",error);
   }
 }
 

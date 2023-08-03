@@ -2,6 +2,7 @@ const { io } = require("../app");
 const dbService = require("../service/db.service");
 const Notification = require("../service/notification.service");
 const tag = require("../constants/event.constants");
+const appConfig = require("../config/app.config");
 
 /**
  * handles message sending action
@@ -44,13 +45,13 @@ async function MessageSentGp(payload) {
     }
 
     activityAttendant.forEach(async (attendant) => {
-      const senderInfo = await dbService.select(["socket_id"])
+      const senderInfo = await dbService.select(["socket_id","user_id","device_token"])
         .from("jp_user_online")
         .where({ user_id: attendant.user_id });
       console.log("Sender info", senderInfo);
 
       const baseUser = await dbService.select("*").from("users").where({ id: sender_id });
-      console.log('base user', baseUser);
+      // console.log('base user', baseUser);
       if (activity_id) {
         // eslint-disable-next-line eqeqeq
         if (sender_id == attendant.user_id) {
@@ -59,21 +60,21 @@ async function MessageSentGp(payload) {
           const notificationService = new Notification();
 
           const notificationPayload = {
-            title: `${baseUser[0].profile_name} sent a message in ${activityInfo[0].title}`,
+            title: `${baseUser[0].name}`,
             body: text,
             type: "chat_message",
             activity_id,
             fcm_token: senderInfo[0].device_token,
             // fcm_token: "e6ZWuAylRASM-FcCUPSuJy:APA91bFQe-3nE7tkGf7VOaJfGJg41e2Z8vZp7Uv5fw_tGqBhyZAJmqfO_qNFakV2rI2CvPBoxKdWHv31deGJb0pYVFolpwsxhlhDfIb16Kky3uJ2KVCTqsZ7qAfj-YawNtXjqwIHHQMS", //senderInfo[0].device_token,
-            sender_image: senderInfo[0].profile_picture,
-            sender_name: senderInfo[0].username,
+            sender_image: (baseUser[0].profile_photo_path == null) ? null : `${appConfig.PHOTO_BASE_PATH}/${baseUser[0].profile_photo_path}`,
+            sender_name: baseUser[0].username,
             sender_id,
             multiple: false,
             chat_message_type: "text",
             message_id: newMessage[0].single_message_id,
           };
 
-          console.log('working-----------------',notificationPayload);
+          // console.log('working-----------------',notificationPayload);
 
           notificationService.send(notificationPayload);
         }

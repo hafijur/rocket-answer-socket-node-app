@@ -12,10 +12,9 @@ async function GetSessions() {
       .from('jp_activity')
       // .where('is_cancelled', false)
       .andWhere('is_closed',false)
-      // .andWhere(function(){
-      //   this.where('customer_id', null)
-      //   .andWhere('expert_id', null)
-      // })
+      .where(function(){
+        this.whereNull('expert_id');
+      })
       .orderBy('activity_id', 'desc');
 
     io.emit("sessions", activities);

@@ -17,6 +17,8 @@ io.on(tag.CONNECTION, (socket) => {
   // console.log(`Socket connected on ${socket.id}`);
   actions.GetSessions();
 
+  // io.emit(tag.REFRESH_SESSIONS);
+
   let connection = 0;
 
   /** ********************
@@ -78,7 +80,9 @@ io.on(tag.CONNECTION, (socket) => {
     socket.join(room);
     socketRooms.set(socket, room);
     console.log(`User joined room: ${room}`);
-    actions.MyMessage({ conversation_activity_idid: 1 });
+
+    // actions.MyMessage({ conversation_activity_idid: 1 });
+    io.emit(tag.REFRESH_SESSIONS,{});
     // actions.MyMessage(room);
   });
 
@@ -102,14 +106,13 @@ io.on(tag.CONNECTION, (socket) => {
   socket.on(`typing`, (data) => {
     // eslint-disable-next-line no-plusplus
 
-    console.log('typing:', data);
     // Check if the socket has joined a room before broadcasting the message
     if (socketRooms.has(socket)) {
       const room = socketRooms.get(socket);
       console.log(`Broadcasting message to room: ${room}`);
       io.to(room).emit(`typing`, data);
     }
-    console.log(`Total connections: ${connection}`);
+    // console.log(`Total connections: ${connection}`);
   });
 
   /** ********************
@@ -188,16 +191,18 @@ io.on(tag.CONNECTION, (socket) => {
     // }
   });
 
-  socket.on(tag.SESSIONS, async (payload) => {
+  socket.on(tag.REFRESH_SESSIONS, async (payload) => {
+    console.log('calling refresh sessions',payload);
     actions.GetSessions(payload);
   });
 
   socket.on(tag.ACTIVITY_JOINED, (payload) => {
-    // console.log('ACTIVITY_JOINED');
+    console.log('ACTIVITY_JOINED ',payload);
     // console.log(`\nCaught ${tag.ACTIVITY_JOINED} event with payload: ${JSON.stringify(payload)}\n`);
     console.log(`socket_id: ${socket.id}, userData: ${JSON.stringify(socket.userData)}`);
 
     actions.ActivityJoined(payload);
+
   });
 
   socket.on(tag.GROUP_JOINED, (payload) => {
