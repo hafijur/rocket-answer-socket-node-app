@@ -46,4 +46,5 @@ module.exports = {
   // next line is for testing,
   START_CONVERSATION_BY_CONVERSATION_CODE: "start_conversation_by_conversation_code",
   SESSIONS: "sessions",
+  REFRESH_SESSIONS: "refresh_sessions",
 };

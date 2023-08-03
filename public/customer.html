@@ -30,7 +30,8 @@
     const socket = io();
 
     let params = (new URL(document.location)).searchParams;
-    let user_id = params.get("user_id") ?? 2;
+    let user_id = params.get("user_id") ?? 30;
+    let customer_id = params.get("user_id") ?? 7;
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
     let activity_id = params.get("activity_id") ?? null;
@@ -76,6 +77,7 @@
           status: 'join',
           user_id: user_id,
           user_type: 'customer',
+          customer_id: customer_id,
           socket_id: socket.id,
         });
       
@@ -125,6 +127,8 @@
           activity_id: room,
           status: 'join',
           user_id: user_id,
+          user_type: 'customer',
+          customer_id: customer_id,
           socket_id: socket.id,
         });
         document.getElementById('room-form').style.display = 'none';
