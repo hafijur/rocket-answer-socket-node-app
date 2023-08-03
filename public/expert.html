@@ -14,6 +14,12 @@
     <button id="join-button">Give Conversation Code</button>
     
   </div>
+
+  <!-- show activity list -->
+  <div id="activity-list-div">
+    <ul id="activity-list"></ul>
+  </div>
+
   <button id="get-sessions">Get Sessions</button>
   <div id="chat-area" style="display: none;">
     <ul id="messages"></ul>
@@ -34,7 +40,7 @@
     let expert_id = params.get("expert_id") ?? 17;
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
-    let activity_id = params.get("activity_id") ?? null;
+    let activity_id = params.get("activity_id") ?? 100;
     console.log("questions",JSON.parse(questions));
 
 
@@ -170,6 +176,21 @@
 
     socket.on('sessions', (message) => {
 
+      // print activity to activity div
+      document.getElementById('activity-list').innerHTML = '';
+      for (let i = 0; i < message.length; i++) {
+        const li = document.createElement('li');
+        // add anchor tag with activity id
+        const a = document.createElement('a');
+        a.href = '/expert.html?activity_id='+message[i].activity_id;
+        a.textContent = message[i].title + ' - ' + message[i].activity_id;
+
+        li.appendChild(a);
+        document.getElementById('activity-list').appendChild(li);
+      }
+
+
+
       console.log('sessions', message);
     });
 
@@ -202,13 +223,7 @@
     socket.on('disconnect', () => {
       console.log('Disconnected from the server.');
     });
-    // Handle incoming chat messages
-    // socket.on('chat message', (message) => {
-    //   const li = document.createElement('li');
-    //   li.textContent = message.message+ ' - ' + message.room;
-    //   console.log('chat message', message);
-    //   document.getElementById('messages').appendChild(li);
-    // });
+
 
     socket.on('recent_chat', (message) => {
       console.log('recent_chat message', message);
@@ -263,6 +278,8 @@
                 text: result.data.file_url, 
                 activity_id: activity_id ?? document.getElementById('room-input').value, 
                 sender_id: user_id,
+                user_type: 'expert',
+                user_type_id: expert_id,
                 socket_id: socket.id,
                 chat_message_type: 'image',
               });
@@ -285,7 +302,8 @@
         text: message, 
         activity_id: activity_id ?? document.getElementById('room-input').value, 
         sender_id: user_id,
-        user_type: 'customer',
+        user_type: 'expert',
+        user_type_id: expert_id,
         socket_id: socket.id,
       });
 

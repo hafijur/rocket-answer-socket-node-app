@@ -29,6 +29,14 @@ app.post("/create_activity", async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       question_answers: req.body.questions
+
+      // title: req.body.title,
+      // description: req.body.description,
+      // question_answers: req.body.questions,
+      // customer_id: req.body.customer_id,
+      // subject: req.body.description,
+      // price: req.body.price,
+      // expert_category_id: req.body.expert_category_id,
     });
   io.emit(tag.REFRESH_SESSIONS);
   console.log("request body", req.body.description);
@@ -36,7 +44,6 @@ app.post("/create_activity", async (req, res) => {
 });
 
 app.post("/customer_create_activity", async (req, res) => {
-
   const ac = await db
     .table("jp_activity")
     .insert({
@@ -46,16 +53,16 @@ app.post("/customer_create_activity", async (req, res) => {
     });
 
   console.log('working here--------------------');
-    
-    io.emit('activity_created',{
-      title: "Good luck",
-      body: "ok",
-      topic:'expert'
-    });
 
-    console.log("items-----------------")
-    
-    io.emit(tag.REFRESH_SESSIONS);
+  io.emit('activity_created', {
+    title: "Good luck",
+    body: "ok",
+    topic: 'expert'
+  });
+
+  console.log("items-----------------");
+
+  io.emit(tag.REFRESH_SESSIONS);
   res.json(ac);
 });
 

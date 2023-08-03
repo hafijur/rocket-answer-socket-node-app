@@ -112,7 +112,7 @@ async function MessageSentGp(payload) {
 
       // // console.log({ sockets });
 
-      io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
+      // io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
     });
   } catch (error) {
     console.log("\n\nFailed to sent message\n\n", error);

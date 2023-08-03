@@ -34,7 +34,7 @@
     let customer_id = params.get("user_id") ?? 7;
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
-    let activity_id = params.get("activity_id") ?? null;
+    let activity_id = params.get("activity_id") ?? 100;
     console.log("questions",JSON.parse(questions));
 
 
@@ -263,6 +263,8 @@
                 text: result.data.file_url, 
                 activity_id: activity_id ?? document.getElementById('room-input').value, 
                 sender_id: user_id,
+                user_type: 'customer',
+                user_type_id: customer_id,
                 socket_id: socket.id,
                 chat_message_type: 'image',
               });
@@ -285,6 +287,7 @@
         text: message, 
         activity_id: activity_id ?? document.getElementById('room-input').value, 
         sender_id: user_id,
+        user_type_id: customer_id,
         user_type: 'customer',
         socket_id: socket.id,
       });
