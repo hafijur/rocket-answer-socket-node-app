@@ -20,7 +20,7 @@ async function MessageViewedGp(payload) {
       .update({ status: "seen", message_view: true })
       .where({ activity_id })
       .andWhere({ sender_id })
-      .returning("*");
+      // .returning("*");
 
     const users = await dbService
       .select(["socket_id", "profile_picture", "profile_name", "user_id"])
@@ -49,7 +49,7 @@ async function MessageViewedGp(payload) {
       io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
     }
   } catch (error) {
-    console.log("Failed to update message status");
+    console.log("Message view gp == Failed to update message status",error);
   }
 }
 

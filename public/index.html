@@ -12,7 +12,9 @@
   <div id="room-form">
     <input id="room-input" placeholder="Enter room name" autocomplete="off" />
     <button id="join-button">Give Conversation Code</button>
+    
   </div>
+  <button id="get-sessions">Get Sessions</button>
   <div id="chat-area" style="display: none;">
     <ul id="messages"></ul>
     <form id="chat-form" action="">
@@ -131,6 +133,11 @@
     });
 
 
+    document.getElementById('get-sessions').addEventListener('click', () => {
+      socket.emit('refresh_sessions');
+    });
+
+
   
 
 
@@ -144,11 +151,7 @@
           device_token :"zkbiaR8bI-2u_cAFAAAD",
 
       });
-      // socket.emit('activity_created',{
-      //       title: 'New request added',
-      //       description: 'please reply this ',
-      //       topic:'expert'
-      //     });
+
     });
 
     socket.on('disconnect', (message) => {

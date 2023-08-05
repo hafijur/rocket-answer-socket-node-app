@@ -56,7 +56,7 @@ async function SetMessageGp(payload) {
     //   io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
     // }
   } catch (error) {
-    console.log("Failed to update message status");
+    console.log("Set message gp == Failed to update message status",error);
   }
 }
 

@@ -60,18 +60,22 @@ async function ActivityJoined(payload) {
       .where('activity_id', activity_id)
       .where('user_id', user_id);
 
-    console.log("Activity Info------------------------", activityInfo[0].title);
     if (!$data.length) {
-      await db
-        .table("jp_activity_attendant")
-        .insert({
-          activity_id,
-          user_id,
-          accepted: 1,
-          icon_url: profile_picture,
-          version: 1,
-
-        });
+      try {
+        
+        await db
+          .table("jp_activity_attendant")
+          .insert({
+            activity_id,
+            user_id,
+            accepted: 1,
+            icon_url: profile_picture,
+            version: 1,
+  
+          });
+      } catch (error) {
+         console.log("activity_joined.action-77 ",error);
+      }
     }
 
     if (privacy === 'public') {
@@ -126,8 +130,9 @@ async function ActivityJoined(payload) {
     const chatList = await db.select('*')
       .from('jp_group_chat_message')
       .where('activity_id', activity_id)
+
       .orderBy('group_message_id', 'desc')
-      .orderBy('group_message_id', 'desc');
+      // .orderBy('group_message_id', 'desc');
     // console.log("Chat List", chatList);
 
     io.to(socket_id).emit('chat_m', chatList);
