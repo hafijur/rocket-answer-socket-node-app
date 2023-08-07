@@ -14,7 +14,7 @@
     <button id="join-button">Give Conversation Code</button>
     
   </div>
-  <button id="get-sessions">Get Sessions</button>
+  <!-- <button id="get-sessions">Get Sessions</button> -->
   <div id="chat-area" style="display: none;">
     <ul id="messages"></ul>
     <form id="chat-form" action="">
@@ -34,8 +34,6 @@
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
     let activity_id = params.get("activity_id") ?? null;
-    console.log("questions",JSON.parse(questions));
-
 
     function createActivity(data) {
 
@@ -50,15 +48,17 @@
         })
         .then(response => response.json())
         .then(result => {
-          // Handle the server response, if needed
+          console.log('Success:', result);
           socket.emit('activity_created',{
             title: data?.title,
             description: data.description,
-            topic:'expert'
+            topic:'expert_1',
+            category_id: 1,
+            user_type: 'customer',
+            user_id: user_id,
           });
           console.log('Success:', result);
-          // Optionally, you can redirect the user to another page
-          window.location.href = '/?user_id=2&activity_id='+result[0]; // Redirect to the home page
+          window.location.href = `/customer.html?user_id=${user_id}&activity_id=`+result.data; 
         })
         .catch(error => {
           console.error('Error:', error);
@@ -70,6 +70,8 @@
     // join call and start chating with this activity id
 
     if (user_id && activity_id) {
+
+      console.log('activity joining');
       socket.emit('activity_joined', {
           activity_id: activity_id,
           status: 'join',
@@ -86,7 +88,7 @@
     if(user_id && questions) {
 
       const answers = JSON.parse(questions);
-      // console.log("answers",answers);
+      console.log("answers",answers);
       let des = "";
       answers.forEach((answer, index) => {
         // last index check
@@ -103,6 +105,10 @@
         title: 'Looking for good family Lawyer',
         description: des,
         questions: questions ,
+        expert_category_id: 3,
+        expert_sub_category_id: 2,
+        customer_id:30,
+        price: 1500
 
       });
 
@@ -131,10 +137,6 @@
       }
     });
 
-
-    document.getElementById('get-sessions').addEventListener('click', () => {
-      socket.emit('refresh_sessions');
-    });
 
 
   

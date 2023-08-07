@@ -6,15 +6,16 @@ const { io } = require("../app");
  * notify all users about newly created activity
  * @param {{activity_id: number}} payload
  */
-async function GetSessions(socket = null) {
+async function GetMySessions(payload) {
   try {
     const activities = await db.select('*')
       .from('conversations')
+      .where('expert_category_id', payload.category_id)
       .andWhere('is_closed', false)
       .whereNull('expert_id')
       .orderBy('id', 'desc');
-    console.log('sessions socket is ', socket.id);
-    io.emit("sessions", activities);
+    // console.log('sessions socket is ', payload.socket.id);
+    io.to(payload.socket?.id).emit("sessions", activities);
   } catch (error) {
     console.log(error);
   }
@@ -22,4 +23,4 @@ async function GetSessions(socket = null) {
   // console.log(activity.rows);
 }
 
-module.exports = GetSessions;
+module.exports = GetMySessions;

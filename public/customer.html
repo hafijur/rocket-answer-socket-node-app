@@ -14,7 +14,7 @@
     <button id="join-button">Give Conversation Code</button>
     
   </div>
-  <button id="get-sessions">Get Sessions</button>
+  <!-- <button id="get-sessions">Get Sessions</button> -->
   <div id="chat-area" style="display: none;">
     <ul id="messages"></ul>
     <form id="chat-form" action="">
@@ -34,7 +34,7 @@
     let customer_id = params.get("user_id") ?? 7;
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
-    let activity_id = params.get("activity_id") ?? 100;
+    let activity_id = params.get("activity_id") ?? 15;
     console.log("questions",JSON.parse(questions));
 
 
@@ -56,7 +56,10 @@
           socket.emit('activity_created',{
             title: data?.title,
             description: data.description,
-            topic:'expert'
+            topic:'expert_1',
+            category_id: 1,
+            user_type: 'customer',
+            user_id: user_id,
           });
           console.log('Success:', result);
           // Optionally, you can redirect the user to another page
@@ -79,6 +82,9 @@
           user_type: 'customer',
           customer_id: customer_id,
           socket_id: socket.id,
+        },(error) => {
+          console.log(error);
+          alert(error);
         });
       
       document.getElementById('room-form').style.display = 'none';
@@ -137,24 +143,25 @@
     });
 
 
-    document.getElementById('get-sessions').addEventListener('click', () => {
-      socket.emit('refresh_sessions');
-    });
-
-
-  
-
-
     socket.on('connect', () => {
+
       console.log('Connected to the server.');
-        socket.emit('online', { 
+        socket.emit('online', {
           user_id: user_id, 
-          account_type: 'personal', 
           socket_id: socket.id,
           last_seen: new Date(),
           device_token :"zkbiaR8bI-2u_cAFAAAD",
-
+          category_id: 1,
+          user_type: 'customer',
+          category_name: 'Lawyers'
       });
+
+      socket.emit('get_online_experts', {
+        user_id: user_id,
+        user_type: 'customer',
+        category_id: 1,
+        socket_id: socket.id,
+      })
 
     });
 
@@ -167,6 +174,13 @@
 
       console.log('user joined message', message);
     });
+
+    socket.on('online_experts', (message) => {
+
+      console.log('total online experts', message);
+    });
+
+
 
     socket.on('sessions', (message) => {
 
@@ -202,13 +216,7 @@
     socket.on('disconnect', () => {
       console.log('Disconnected from the server.');
     });
-    // Handle incoming chat messages
-    // socket.on('chat message', (message) => {
-    //   const li = document.createElement('li');
-    //   li.textContent = message.message+ ' - ' + message.room;
-    //   console.log('chat message', message);
-    //   document.getElementById('messages').appendChild(li);
-    // });
+
 
     socket.on('recent_chat', (message) => {
       console.log('recent_chat message', message);
@@ -221,7 +229,6 @@
     });
 
     socket.on('chat_m', (message) => {
-
       console.log('chat_m message', message);
     });
 
@@ -266,7 +273,9 @@
                 user_type: 'customer',
                 user_type_id: customer_id,
                 socket_id: socket.id,
-                chat_message_type: 'image',
+                chat_message_type: 'text',
+                receiver_id: 28,
+                receiver_device_token: 'zkbiaR8bI-2u_cAFAAAD',
               });
             }
 
@@ -290,17 +299,10 @@
         user_type_id: customer_id,
         user_type: 'customer',
         socket_id: socket.id,
+        receiver_id: 28,
+        receiver_device_token: 'zkbiaR8bI-2u_cAFAAAD',
       });
 
-      // socket.emit('message_sent', 
-      // { 
-      //   text: message,
-      //   room_id: document.getElementById('room-input').value,
-      //   sender_id: user_id,
-      //   receiver_id: receiver_id,
-      //   sender_name: 'Hafij '+Math.floor(Math.random() * 10),
-      //   sender_image: "http://192.168.1.209/roketanswer/storage/file_upload/168967876087091792.png"
-      // });
       
     });
   </script>

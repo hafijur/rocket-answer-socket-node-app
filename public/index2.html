@@ -16,7 +16,7 @@
     const socket = io();
 
     let params = (new URL(document.location)).searchParams;
-    let user_id = params.get("user_id") ?? 2;
+    let user_id = params.get("user_id") ?? 30;
 
     // Function to show a question on the page
     function showQuestion(question) {

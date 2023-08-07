@@ -18,6 +18,9 @@ const FileUploadedGp = require("./file_uploaded_gp.action");
 const UserAcceptJoinRequest = require("./user_accept_join_request.action");
 const MyMessage = require("./my_message.action");
 const GetSessions = require("./get_sessions.action");
+const GetMySessions = require("./get_my_sessions.action");
+const MessageSentGpUpdated = require("./message_sent_gp_updated.action");
+const GetCatWiseOnlineList = require("./get_cat_wise_online_list.action");
 
 module.exports = {
   Online,
@@ -39,5 +42,8 @@ module.exports = {
   FileUploadedGp,
   UserAcceptJoinRequest,
   MyMessage,
-  GetSessions
+  GetSessions,
+  GetMySessions,
+  MessageSentGpUpdated,
+  GetCatWiseOnlineList,
 };

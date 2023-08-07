@@ -4,6 +4,7 @@ const appConfig = require("./config/app.config");
 const db = require("./service/db.service");
 const { io } = require("./app");
 const tag = require("./constants/event.constants");
+const MyTime = require("./service/my_time.service");
 
 const PORT = process.env.PORT || appConfig.PORT;
 
@@ -11,36 +12,127 @@ require("./service/socket.service");
 
 // app.use(app.urlencoded({ extended: true }));
 app.get("/test", async (req, res) => {
-  db.select('*').from('users').then((data) => {
-    console.log(data);
-    res.json(data);
-  }).catch((err) => {
-    console.log(err);
-    res.json({
-      message: 'Database Connection error'
+  // db.select('*').from('users').where('id', 3000).first()
+  //   .then((data) => {
+  //     console.log(data);
+  //     res.json(data);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     res.json({
+  //       message: 'Database Connection error'
+  //     });
+  //   });
+
+  // const requiredFields = ['customer_id', 'expert_category_id', 'title', 'description', 'price']; // Replace with your required fields
+  // const missingFields = [];
+
+  // requiredFields.forEach((field) => {
+  //   if (!req.body[field] && !req.query[field]) {
+  //     missingFields.push(field);
+  //   }
+  // });
+
+  // if (missingFields.length > 0) {
+  //   return res.status(400).json({
+  //     success: false,
+  //     message: `Missing required fields: ${missingFields.join(', ')}`
+  //   });
+  // }
+
+  // try {
+  //   const [id] = await db.table('conversations')
+  //     .insert({
+  //       code: Date.now(),
+  //       customer_id: req.body.customer_id,
+  //       expert_category_id: req.body.expert_category_id,
+  //       expert_sub_category_id: req.body.expert_sub_category_id,
+  //       subject: req.body.title,
+  //       title: req.body.title,
+  //       description: req.body.description,
+  //       price: req.body.price,
+  //       date: MyTime.getDate(),
+  //       created_at: MyTime.getDateTime(),
+  //     }).returning('id');
+  //   res.json({
+  //     success: true,
+  //     message: 'Conversation created successfully',
+  //     data: id
+  //   });
+  // } catch (error) {
+  //   console.log("Not creating reason", error);
+  //   res.status(500).json({
+  //     success: false,
+  //     message: `Conversation not created |${error.message}`,
+  //   });
+  // }
+
+  db.count('user_online_id as total').from('jp_user_online').where('online_status', 'active').first()
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        message: `Database Connection error${err.message}`
+      });
     });
-  });
 });
 
 app.post("/create_activity", async (req, res) => {
-  const ac = await db
-    .table("jp_activity")
-    .insert({
-      title: req.body.title,
-      description: req.body.description,
-      question_answers: req.body.questions
+  // const ac = await db
+  //   .table("jp_activity")
+  //   .insert({
+  //     title: req.body.title,
+  //     description: req.body.description,
+  //     question_answers: req.body.questions
+  //   });
+  // io.emit(tag.REFRESH_SESSIONS);
+  // console.log("request body", req.body.description);
+  // res.json(ac);
 
-      // title: req.body.title,
-      // description: req.body.description,
-      // question_answers: req.body.questions,
-      // customer_id: req.body.customer_id,
-      // subject: req.body.description,
-      // price: req.body.price,
-      // expert_category_id: req.body.expert_category_id,
+  const requiredFields = ['customer_id', 'expert_category_id', 'title', 'description', 'price']; // Replace with your required fields
+  const missingFields = [];
+
+  requiredFields.forEach((field) => {
+    if (!req.body[field] && !req.query[field]) {
+      missingFields.push(field);
+    }
+  });
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: `Missing required fields: ${missingFields.join(', ')}`
     });
-  io.emit(tag.REFRESH_SESSIONS);
-  console.log("request body", req.body.description);
-  res.json(ac);
+  }
+
+  try {
+    const [id] = await db.table('conversations')
+      .insert({
+        code: Date.now(),
+        customer_id: req.body.customer_id,
+        expert_category_id: req.body.expert_category_id,
+        expert_sub_category_id: req.body.expert_sub_category_id,
+        subject: req.body.title,
+        title: req.body.title,
+        description: req.body.description,
+        price: req.body.price,
+        date: MyTime.getDate(),
+        created_at: MyTime.getDateTime(),
+      }).returning('id');
+    res.json({
+      success: true,
+      message: 'Conversation created successfully',
+      data: id
+    });
+  } catch (error) {
+    console.log("Not creating reason", error);
+    res.status(500).json({
+      success: false,
+      message: `Conversation not created |${error.message}`,
+    });
+  }
 });
 
 app.post("/customer_create_activity", async (req, res) => {
