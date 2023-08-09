@@ -7,7 +7,7 @@ const { io } = require("../app");
  * @param {{activity_id: number}} payload
  */
 async function GetCatWiseOnlineList(payload) {
-  console.log('GetCatWiseOnlineList socket is ', payload);
+  // console.log('GetCatWiseOnlineList socket is ', payload);
   try {
     const online_users = await db.count('user_online_id as total').from('jp_user_online')
     .where('online_status', 'active')

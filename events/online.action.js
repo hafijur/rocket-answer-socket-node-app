@@ -33,7 +33,10 @@ async function Online(payload) {
           online_status: 'active',
           last_seen: payload.last_seen,
           socket_id: payload.socket_id,
-          device_token: payload.device_token
+          device_token: payload.device_token,
+          category_id: payload?.category_id,
+          category_name: payload?.category_name,
+          subcategory_id: payload?.subcategory_id,
         })
         .where({ user_id: payload.user_id });
     } else {
@@ -49,9 +52,9 @@ async function Online(payload) {
         socket_id: payload.socket_id,
         device_token: "niuqXN48ZfUvCp6XAAAD",
         user_type: payload.user_type,
-        category_id: payload.category_id,
-        category_name: payload.category_name,
-        subcategory_id: payload.subcategory_id,
+        category_id: payload?.category_id,
+        category_name: payload?.category_name,
+        subcategory_id: payload?.subcategory_id,
       });
     }
   } catch (error) {

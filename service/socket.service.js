@@ -51,7 +51,7 @@ io.on(tag.CONNECTION, (socket) => {
     actions.GetMySessions(payload);
   });
   socket.on(tag.GET_ONLINE_EXPERTS, (payload) => {
-    console.log('GetCatWiseOnlineList socket is ', payload);
+    // console.log('GetCatWiseOnlineList socket is ', payload);
     actions.GetCatWiseOnlineList(payload);
   });
 
@@ -144,6 +144,7 @@ io.on(tag.CONNECTION, (socket) => {
     notificationService.sendTopicNotificaion(notificationPayload);
 
     io.emit(tag.NOTIFY_ACTIVITY, payload);
+    actions.GetCatWiseSessionsList(payload);
   });
 
   socket.on(tag.REFRESH_SESSIONS, async (payload) => {
@@ -151,8 +152,12 @@ io.on(tag.CONNECTION, (socket) => {
   });
 
   socket.on(tag.ACTIVITY_JOINED, (payload, error) => {
+    console.log('Activity joined', payload);
     dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
       actions.ActivityJoined(payload);
+      // if(payload.user_type === 'expert') {
+        // actions.GetCatWiseSessionsList(payload);
+      // }
       // if (payload.user_type === 'customer') {
       //   if (res.customer_id == null || payload.user_id === res.customer_id) {
       //     error("Already joined a customer");
@@ -169,43 +174,42 @@ io.on(tag.CONNECTION, (socket) => {
     });
   });
 
-  socket.on(tag.GROUP_JOINED, (payload) => {
-    actions.GroupJoined(payload);
-  });
+  // socket.on(tag.GROUP_JOINED, (payload) => {
+  //   actions.GroupJoined(payload);
+  // });
 
-  socket.on(tag.CREATE_SURPRISE_ACTIVITY, (payload) => {
-    actions.StartSurpriseActivity(payload);
-  });
+  // socket.on(tag.CREATE_SURPRISE_ACTIVITY, (payload) => {
+  //   actions.StartSurpriseActivity(payload);
+  // });
 
-  socket.on(tag.INVITE_PARTICIPANT, (payload) => {
-    actions.InviteParticipant(payload);
-  });
+  // socket.on(tag.INVITE_PARTICIPANT, (payload) => {
+  //   actions.InviteParticipant(payload);
+  // });
 
-  socket.on(tag.JOIN_SURPRISE_ACTIVITY, (payload) => {
-    actions.JoinSurpriseActivity(payload);
-  });
+  // socket.on(tag.JOIN_SURPRISE_ACTIVITY, (payload) => {
+  //   actions.JoinSurpriseActivity(payload);
+  // });
 
-  socket.on(tag.CREATE_SURPRISE_POLL, (payload) => {
-    io.emit(tag.NOTIFY_SURPRISE_POLL, payload);
-  });
+  // socket.on(tag.CREATE_SURPRISE_POLL, (payload) => {
+  //   io.emit(tag.NOTIFY_SURPRISE_POLL, payload);
+  // });
 
-  socket.on(tag.VOTE_ACTIVITY, (payload) => {
-    actions.VoteActivity(payload);
-  });
+  // socket.on(tag.VOTE_ACTIVITY, (payload) => {
+  //   actions.VoteActivity(payload);
+  // });
 
-  socket.on(tag.SURPRISE_ACTIVITY_ENDED, (payload) => {
-    actions.SurpriseActivityEnded(payload);
-  });
+  // socket.on(tag.SURPRISE_ACTIVITY_ENDED, (payload) => {
+  //   actions.SurpriseActivityEnded(payload);
+  // });
 
-  socket.on(tag.ACTIVITY_CANCELLED, (payload) => {
-    // console.log(`\nCaught ${tag.ACTIVITY_CANCELLED} event with payload: ${JSON.stringify(payload)}\n`);
+  // socket.on(tag.ACTIVITY_CANCELLED, (payload) => {
 
-    io.emit(tag.NOTIFY_ACTIVITY_CANCELLED, payload);
-  });
+  //   io.emit(tag.NOTIFY_ACTIVITY_CANCELLED, payload);
+  // });
 
-  socket.on(tag.MESSAGE_SENT, (payload) => {
-    actions.MessageSent(payload);
-  });
+  // socket.on(tag.MESSAGE_SENT, (payload) => {
+  //   actions.MessageSent(payload);
+  // });
 
   socket.on(tag.MESSAGE_SENT_GP, (payload) => {
     actions.MessageSentGp(payload);

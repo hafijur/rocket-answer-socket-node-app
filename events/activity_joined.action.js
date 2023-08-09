@@ -130,6 +130,7 @@ async function ActivityJoined(payload) {
 
     io.to(socket_id).emit('chat_m', chatList);
 
+
     if (privacy === "private") {
       // io.emit(tag.GET_MESSAGE_GP, {
       //   group_message_id: chatList.group_message_id,

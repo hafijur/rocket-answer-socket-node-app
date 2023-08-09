@@ -14,8 +14,8 @@ async function GetMySessions(payload) {
       .andWhere('is_closed', false)
       .whereNull('expert_id')
       .orderBy('id', 'desc');
-    // console.log('sessions socket is ', payload.socket.id);
-    io.to(payload.socket?.id).emit("sessions", activities);
+    console.log('get my sessions socket is ', payload?.socket_id);
+    io.to(payload.socket_id).emit("sessions", activities);
   } catch (error) {
     console.log(error);
   }

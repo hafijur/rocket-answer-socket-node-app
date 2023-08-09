@@ -65,6 +65,8 @@ async function MessageSentGp(payload) {
       return;
     }
 
+    
+
     activityAttendant.forEach(async (attendant) => {
       const senderInfo = await dbService.select(["socket_id", "user_id", "device_token"])
         .from("jp_user_online")
@@ -103,6 +105,7 @@ async function MessageSentGp(payload) {
         sockets.push(senderInfo[0].socket_id);
 
         io.to(sockets).emit(tag.GET_MESSAGE_GP, payload);
+
       }
 
       // // console.log({ sockets });

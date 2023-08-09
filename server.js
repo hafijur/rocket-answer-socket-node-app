@@ -67,16 +67,30 @@ app.get("/test", async (req, res) => {
   //   });
   // }
 
-  db.count('user_online_id as total').from('jp_user_online').where('online_status', 'active').first()
-    .then((data) => {
-      res.json(data);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.json({
-        message: `Database Connection error${err.message}`
-      });
-    });
+  // db.count('user_online_id as total').from('jp_user_online').where('online_status', 'active').first()
+  //   .then((data) => {
+  //     res.json(data);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     res.json({
+  //       message: `Database Connection error${err.message}`
+  //     });
+  //   });
+
+  // get category wise jp online users ids
+  let data = await db.select('user_online_id').from('jp_user_online').where('online_status', 'active').where('category_id', 1).pluck('socket_id')
+  res.json(data);
+
+    // .then((data) => {
+    //   res.json(data);
+    // })
+    // .catch((err) => {
+    //   console.log(err);
+    //   res.json({
+    //     message: `Database Connection error${err.message}`
+    //   });
+    // });
 });
 
 app.post("/create_activity", async (req, res) => {

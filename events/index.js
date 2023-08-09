@@ -21,6 +21,7 @@ const GetSessions = require("./get_sessions.action");
 const GetMySessions = require("./get_my_sessions.action");
 const MessageSentGpUpdated = require("./message_sent_gp_updated.action");
 const GetCatWiseOnlineList = require("./get_cat_wise_online_list.action");
+const GetCatWiseSessionsList = require("./get_cat_wise_sessions_list.action");
 
 module.exports = {
   Online,
@@ -46,4 +47,5 @@ module.exports = {
   GetMySessions,
   MessageSentGpUpdated,
   GetCatWiseOnlineList,
+  GetCatWiseSessionsList
 };
