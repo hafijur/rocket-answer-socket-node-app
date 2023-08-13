@@ -3,6 +3,7 @@ const { io } = require("../app");
 const actions = require("../events");
 const tag = require("../constants/event.constants");
 const Notification = require('./notification.service');
+const dbService = require("./db.service");
 
 const socketRooms = new Map();
 const sessions = new Map();
@@ -14,20 +15,9 @@ const questions = [
 
 io.on(tag.CONNECTION, (socket) => {
   // console.log(socket);
-  // console.log(`Socket connected on ${socket.id}`);
-  actions.GetSessions();
+  console.log(`Socket connected on ${socket.id}`);
+  // actions.GetSessions(socket);
 
-  io.emit(tag.REFRESH_SESSIONS);
-
-  let connection = 0;
-
-  /** ********************
-  * start of new code
-  *********************** */
-  console.log('A user connected');
-
-  // Function to ask a question to the client
-  // Function to ask a question to the client
   function askQuestion(index) {
     if (index >= questions.length) {
       // All questions have been asked
@@ -57,6 +47,14 @@ io.on(tag.CONNECTION, (socket) => {
     askQuestion(0);
   });
 
+  socket.on('get_my_sessions', (payload) => {
+    actions.GetMySessions(payload);
+  });
+  socket.on(tag.GET_ONLINE_EXPERTS, (payload) => {
+    // console.log('GetCatWiseOnlineList socket is ', payload);
+    actions.GetCatWiseOnlineList(payload);
+  });
+
   // Handle client's answers
   socket.on('answer', (answer) => {
     const session = sessions.get(socket.id);
@@ -80,39 +78,25 @@ io.on(tag.CONNECTION, (socket) => {
     socket.join(room);
     socketRooms.set(socket, room);
     console.log(`User joined room: ${room}`);
-
-    // actions.MyMessage({ conversation_activity_idid: 1 });
-    io.emit(tag.REFRESH_SESSIONS,{});
-    // actions.MyMessage(room);
+    actions.GetSessions();
   });
 
   // Handle incoming chat messages
-  socket.on('chat message', (data) => {
-    // eslint-disable-next-line no-plusplus
-    connection++;
-    console.log('Received message:', data);
-    // Check if the socket has joined a room before broadcasting the message
-    if (socketRooms.has(socket)) {
-      const room = socketRooms.get(socket);
-      console.log(`Broadcasting message to room: ${room}`);
+  // socket.on('chat message', (data) => {
+  //   if (socketRooms.has(socket)) {
+  //     const room = socketRooms.get(socket);
+  //     console.log(`Broadcasting message to room: ${room}`);
 
-      io.to(room).emit('chat message', data);
-    }
-    // console.log(`Total connections: ${connection}`);
-  });
-
-  // on typing
+  //     io.to(room).emit('chat message', data);
+  //   }
+  // });
 
   socket.on(`typing`, (data) => {
-    // eslint-disable-next-line no-plusplus
-
-    // Check if the socket has joined a room before broadcasting the message
     if (socketRooms.has(socket)) {
       const room = socketRooms.get(socket);
       console.log(`Broadcasting message to room: ${room}`);
       io.to(room).emit(`typing`, data);
     }
-    // console.log(`Total connections: ${connection}`);
   });
 
   /** ********************
@@ -120,20 +104,13 @@ io.on(tag.CONNECTION, (socket) => {
   *********************** */
 
   socket.on(tag.ONLINE, (payload) => {
-    // console.log("\nUSER ONLINE------- payload: ", payload, "\n");
-    // console.log("\nUSER ONLINE-------  ", payload.user_id, "\n");
-
-    // console.log('user online', payload);
-
     socket.user_id = payload.user_id;
     socket.account_type = payload.account_type;
     payload.socket_id = socket.id;
-    // console.log("\n\n", tag.ONLINE, payload, "\n");
     socket.userData = payload;
 
     actions.Online(payload);
 
-    // console.log(`\nEmitting ${tag.USER_JOINED} with payload: ${JSON.stringify(payload)}`);
     io.emit(tag.USER_JOINED, payload);
 
     const onlinePayload = {
@@ -143,172 +120,131 @@ io.on(tag.CONNECTION, (socket) => {
       online_status: "active",
     };
 
-    // console.log(`\nEmitting ${tag.USER_ONLINE} with payload: ${JSON.stringify(onlinePayload)}`);
-
     io.emit(tag.USER_ONLINE, onlinePayload);
   });
 
   socket.on(tag.GET_NEAREST_USERS, async (payload) => {
-    // console.log(`\nCaught ${tag.GET_NEAREST_USERS} event with payload: ${JSON.stringify(payload)}\n`);
-
     const users = await actions.GetNearestUsers(payload);
 
-    // console.log(`\nEmitting ${tag.NEAREST_USER_LIST} with payload ${JSON.stringify(users)}\n`);
     io.to(socket.id).emit(tag.NEAREST_USER_LIST, users);
-
-    // actions.BroadcastToNearestUser({ users, userData: socket.userData });
   });
 
   socket.on(tag.ACTIVITY_CREATED, async (payload) => {
-
-    console.log('activity created payload--------------------',payload);
 
     const notificationService = new Notification();
 
     const notificationPayload = {
       title: payload.title,
       body: payload.description,
-      topic:payload.topic,
+      topic: payload.topic,
       type: "notify_new_request",
 
     };
 
+    console.log('notification payload',notificationPayload);
+
     notificationService.sendTopicNotificaion(notificationPayload);
 
     io.emit(tag.NOTIFY_ACTIVITY, payload);
-
-
-    // console.log(`\nCaught ${tag.ACTIVITY_CREATED} event with payload: ${JSON.stringify(payload)}\n`);
-
-    // const activity = await actions.GetActivityInfo(payload, socket.user_id);
-    // console.log("activity : ");
-    // console.log(activity);
-
-    // if (activity.length) {
-    //   // console.log(`\nEmitting ${tag.NOTIFY_ACTIVITY} with payload ${JSON.stringify(activity[0])}\n`);
-
-    //   io.emit(tag.NOTIFY_ACTIVITY, activity[0]);
-    // }
+    actions.GetCatWiseSessionsList(payload);
   });
 
   socket.on(tag.REFRESH_SESSIONS, async (payload) => {
-    console.log('calling refresh sessions',payload);
     actions.GetSessions(payload);
   });
 
-  socket.on(tag.ACTIVITY_JOINED, (payload) => {
-    console.log('ACTIVITY_JOINED ',payload);
-    // console.log(`\nCaught ${tag.ACTIVITY_JOINED} event with payload: ${JSON.stringify(payload)}\n`);
-    console.log(`socket_id: ${socket.id}, userData: ${JSON.stringify(socket.userData)}`);
-
+  socket.on(tag.ACTIVITY_JOINED, (payload, error) => {
+    // console.log('Activity joined', payload);
     actions.ActivityJoined(payload);
-
+    actions.GetCatWiseSessionsList(payload);
+    dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
+      // actions.ActivityJoined(payload);
+      // actions.GetCatWiseSessionsList(payload);
+      // if(payload.user_type === 'expert') {
+      // }
+      // if (payload.user_type === 'customer') {
+      //   if (res.customer_id == null || payload.user_id === res.customer_id) {
+      //     error("Already joined a customer");
+      //   } else {
+      //     actions.ActivityJoined(payload);
+      //   }
+      // } else if (payload.user_type === 'expert') {
+      //   if (res.expert_id == null || payload.user_id === res.expert_id) {
+      //     actions.ActivityJoined(payload);
+      //   } else {
+      //     error("Already joined an expert");
+      //   }
+      // }
+    });
   });
 
-  socket.on(tag.GROUP_JOINED, (payload) => {
-    // console.log(`\nCaught ${tag.GROUP_JOINED} event with payload: ${JSON.stringify(payload)}\n`);
-    // console.log(`socket_id: ${socket.id}, userData: ${JSON.stringify(socket.userData)}`);
+  // socket.on(tag.GROUP_JOINED, (payload) => {
+  //   actions.GroupJoined(payload);
+  // });
 
-    actions.GroupJoined(payload);
-  });
+  // socket.on(tag.CREATE_SURPRISE_ACTIVITY, (payload) => {
+  //   actions.StartSurpriseActivity(payload);
+  // });
 
-  socket.on(tag.CREATE_SURPRISE_ACTIVITY, (payload) => {
-    // console.log(`\nCaught ${tag.CREATE_SURPRISE_ACTIVITY} event with payload: ${JSON.stringify(payload)}\n`);
+  // socket.on(tag.INVITE_PARTICIPANT, (payload) => {
+  //   actions.InviteParticipant(payload);
+  // });
 
-    actions.StartSurpriseActivity(payload);
-  });
+  // socket.on(tag.JOIN_SURPRISE_ACTIVITY, (payload) => {
+  //   actions.JoinSurpriseActivity(payload);
+  // });
 
-  socket.on(tag.INVITE_PARTICIPANT, (payload) => {
-    // console.log(`\nCaught ${tag.INVITE_PARTICIPANT} event with payload: ${JSON.stringify(payload)}\n`);
+  // socket.on(tag.CREATE_SURPRISE_POLL, (payload) => {
+  //   io.emit(tag.NOTIFY_SURPRISE_POLL, payload);
+  // });
 
-    actions.InviteParticipant(payload);
-  });
+  // socket.on(tag.VOTE_ACTIVITY, (payload) => {
+  //   actions.VoteActivity(payload);
+  // });
 
-  socket.on(tag.JOIN_SURPRISE_ACTIVITY, (payload) => {
-    // console.log(`\nCaught ${tag.JOINED_SURPRISE_ACTIVITY} event with payload: ${JSON.stringify(payload)}\n`);
-    actions.JoinSurpriseActivity(payload);
-  });
+  // socket.on(tag.SURPRISE_ACTIVITY_ENDED, (payload) => {
+  //   actions.SurpriseActivityEnded(payload);
+  // });
 
-  socket.on(tag.CREATE_SURPRISE_POLL, (payload) => {
-    // console.log(`\nCaught ${tag.CREATE_SURPRISE_POLL} event with payload: ${JSON.stringify(payload)}\n`);
+  // socket.on(tag.ACTIVITY_CANCELLED, (payload) => {
 
-    io.emit(tag.NOTIFY_SURPRISE_POLL, payload);
-  });
+  //   io.emit(tag.NOTIFY_ACTIVITY_CANCELLED, payload);
+  // });
 
-  socket.on(tag.VOTE_ACTIVITY, (payload) => {
-    // console.log(`\nCaught ${tag.VOTE_ACTIVITY} event with payload: ${JSON.stringify(payload)}\n`);
+  // socket.on(tag.MESSAGE_SENT, (payload) => {
+  //   actions.MessageSent(payload);
+  // });
 
-    actions.VoteActivity(payload);
-  });
+  // socket.on(tag.MESSAGE_SENT_GP, (payload) => {
+  //   actions.MessageSentGp(payload);
+  // });
 
-  socket.on(tag.SURPRISE_ACTIVITY_ENDED, (payload) => {
-    // console.log(`\nCaught ${tag.SURPRISE_ACTIVITY_ENDED} event with payload: ${JSON.stringify(payload)}\n`);
+  // io.on(tag.GET_MESSAGE, (payload) => {
+  //   console.log('GET_MESSAGE listening: ', payload);
+  // });
 
-    actions.SurpriseActivityEnded(payload);
-  });
+  // socket.on(tag.SET_MESSAGE_GP, (payload) => {
+  //   io.emit(tag.GET_MESSAGE_GP, payload);
+  // });
 
-  socket.on(tag.ACTIVITY_CANCELLED, (payload) => {
-    // console.log(`\nCaught ${tag.ACTIVITY_CANCELLED} event with payload: ${JSON.stringify(payload)}\n`);
+  // socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
+  //   // console.log(`SET_VIEW_MESSAGE_GP`);
+  //   // console.log(payload);
+  //   actions.MessageViewedGp(payload);
+  //   io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
+  // });
 
-    io.emit(tag.NOTIFY_ACTIVITY_CANCELLED, payload);
-  });
+  // socket.on(tag.SET_REMOVE_JOIN_REQUEST, (payload) => {
+  //   // console.log(`SET_REMOVE_JOIN_REQUEST`);
+  //   // console.log(payload);
+  //   io.emit(tag.GET_REMOVE_JOIN_REQUEST, payload);
+  // });
 
-  socket.on(tag.MESSAGE_SENT, (payload) => {
-    // console.log(
-    //   `Message sent from user_id:${payload.sender_id} to user_id:${payload.receiver_id} at:${payload.sent_at
-    //   } socket_id ${socket.id} userData: ${JSON.stringify(socket.userData)}`
-    // );
-    console.log(`\nCaught ${tag.MESSAGE_SENT} event with payload: ${JSON.stringify(payload)}\n`);
-
-    actions.MessageSent(payload);
-  });
-
-  socket.on(tag.MESSAGE_SENT_GP, (payload) => {
-    // console.log(
-    //   `Message sent from user_id:${payload.sender_id} to user_id:${payload.receiver_id} at:${payload.sent_at
-    //   } socket_id ${socket.id} userData: ${JSON.stringify(socket.userData)}`
-    // );
-    // console.log(`\nCaught ${tag.MESSAGE_SENT} event with payload: ${JSON.stringify(payload)}\n`);
-
-    actions.MessageSentGp(payload);
-  });
-
-  io.on(tag.GET_MESSAGE, (payload) => {
-    console.log('GET_MESSAGE listening: ', payload);
-  });
-
-  socket.on(tag.SET_MESSAGE_GP, (payload) => {
-    // console.log('SET_MESSAGE_GP : ');
-    io.emit(tag.GET_MESSAGE_GP, payload);
-    // console.log('payload');
-    // console.log(payload);
-    // console.log(
-    //   `SET_MESSAGE_GP Message sent from user_id:${payload.sender_id} to user_id:${payload.receiver_id} at:${payload.sent_at
-    //   } socket_id ${socket.id} userData: ${JSON.stringify(socket.userData)}`
-    // );
-    // console.log(`\nCaught ${tag.MESSAGE_SENT} event with payload: ${JSON.stringify(payload)}\n`);
-
-    // actions.MessageSentGp(payload);
-  });
-
-  socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
-    // console.log(`SET_VIEW_MESSAGE_GP`);
-    // console.log(payload);
-    actions.MessageViewedGp(payload);
-    io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
-  });
-
-  socket.on(tag.SET_REMOVE_JOIN_REQUEST, (payload) => {
-    // console.log(`SET_REMOVE_JOIN_REQUEST`);
-    // console.log(payload);
-    io.emit(tag.GET_REMOVE_JOIN_REQUEST, payload);
-  });
-
-  socket.on(tag.MESSAGE_VIEWED, (payload) => {
-    // console.log(`user_id:${payload.receiver_id} viewed user_id:${payload.sender_id} message_id:${payload.message_id}`);
-    // console.log(`\nCaught ${tag.MESSAGE_VIEWED} event with payload: ${JSON.stringify(payload)}\n`);
-    actions.MessageViewed(payload);
-  });
+  // socket.on(tag.MESSAGE_VIEWED, (payload) => {
+  //   // console.log(`user_id:${payload.receiver_id} viewed user_id:${payload.sender_id} message_id:${payload.message_id}`);
+  //   // console.log(`\nCaught ${tag.MESSAGE_VIEWED} event with payload: ${JSON.stringify(payload)}\n`);
+  //   actions.MessageViewed(payload);
+  // });
 
   socket.on(tag.UPLOAD_FILE, (payload) => {
     console.log("upload file event fired---", payload);

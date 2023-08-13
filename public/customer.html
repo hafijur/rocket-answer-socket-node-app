@@ -30,14 +30,18 @@
     const socket = io();
 
     let params = (new URL(document.location)).searchParams;
-    let user_id = params.get("user_id") ?? 2;
+    let user_id = params.get("user_id") ?? 30;
+    let customer_id = params.get("user_id") ?? 7;
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
-    let activity_id = params.get("activity_id") ?? null;
+    let activity_id = params.get("activity_id") ?? 15;
+    console.log("questions",JSON.parse(questions));
+
 
     function createActivity(data) {
 
       if (questions !== null) {
+
 
         fetch('/create_activity', {
           method: 'POST',
@@ -48,17 +52,18 @@
         })
         .then(response => response.json())
         .then(result => {
-          console.log('Success:', result);
+          // Handle the server response, if needed
           socket.emit('activity_created',{
             title: data?.title,
             description: data.description,
             topic:'expert_1',
-            category_id: 3,
+            category_id: 1,
             user_type: 'customer',
             user_id: user_id,
           });
           console.log('Success:', result);
-          window.location.href = `/customer.html?user_id=${user_id}&activity_id=`+result.data; 
+          // Optionally, you can redirect the user to another page
+          window.location.href = '/?user_id=2&activity_id='+result[0]; // Redirect to the home page
         })
         .catch(error => {
           console.error('Error:', error);
@@ -70,14 +75,16 @@
     // join call and start chating with this activity id
 
     if (user_id && activity_id) {
-
-      console.log('activity joining');
       socket.emit('activity_joined', {
           activity_id: activity_id,
           status: 'join',
           user_id: user_id,
           user_type: 'customer',
+          customer_id: customer_id,
           socket_id: socket.id,
+        },(error) => {
+          console.log(error);
+          alert(error);
         });
       
       document.getElementById('room-form').style.display = 'none';
@@ -88,7 +95,7 @@
     if(user_id && questions) {
 
       const answers = JSON.parse(questions);
-      console.log("answers",answers);
+      // console.log("answers",answers);
       let des = "";
       answers.forEach((answer, index) => {
         // last index check
@@ -105,10 +112,6 @@
         title: 'Looking for good family Lawyer',
         description: des,
         questions: questions ,
-        expert_category_id: 3,
-        expert_sub_category_id: 2,
-        customer_id:30,
-        price: 1500
 
       });
 
@@ -130,6 +133,8 @@
           activity_id: room,
           status: 'join',
           user_id: user_id,
+          user_type: 'customer',
+          customer_id: customer_id,
           socket_id: socket.id,
         });
         document.getElementById('room-form').style.display = 'none';
@@ -138,20 +143,25 @@
     });
 
 
-
-  
-
-
     socket.on('connect', () => {
+
       console.log('Connected to the server.');
-        socket.emit('online', { 
+        socket.emit('online', {
           user_id: user_id, 
-          account_type: 'personal', 
           socket_id: socket.id,
           last_seen: new Date(),
           device_token :"zkbiaR8bI-2u_cAFAAAD",
-
+          category_id: 1,
+          user_type: 'customer',
+          category_name: 'Lawyers'
       });
+
+      socket.emit('get_online_experts', {
+        user_id: user_id,
+        user_type: 'customer',
+        category_id: 1,
+        socket_id: socket.id,
+      })
 
     });
 
@@ -164,6 +174,13 @@
 
       console.log('user joined message', message);
     });
+
+    socket.on('online_experts', (message) => {
+
+      console.log('total online experts', message);
+    });
+
+
 
     socket.on('sessions', (message) => {
 
@@ -180,11 +197,11 @@
     // });
 
     socket.on('activity_joined', (message) => {
-      io.emit('get_message', {
-        activity_id: message.activity_id,
-        socket_id: socket.id,
-      });
-      console.log('user joined message', message);
+      // io.emit('get_message', {
+      //   activity_id: message.activity_id,
+      //   socket_id: socket.id,
+      // });
+      // console.log('user joined message', message);
     });
 
     socket.on('get_message_gp', (message) => {
@@ -199,13 +216,7 @@
     socket.on('disconnect', () => {
       console.log('Disconnected from the server.');
     });
-    // Handle incoming chat messages
-    // socket.on('chat message', (message) => {
-    //   const li = document.createElement('li');
-    //   li.textContent = message.message+ ' - ' + message.room;
-    //   console.log('chat message', message);
-    //   document.getElementById('messages').appendChild(li);
-    // });
+
 
     socket.on('recent_chat', (message) => {
       console.log('recent_chat message', message);
@@ -218,7 +229,6 @@
     });
 
     socket.on('chat_m', (message) => {
-
       console.log('chat_m message', message);
     });
 
@@ -260,8 +270,12 @@
                 text: result.data.file_url, 
                 activity_id: activity_id ?? document.getElementById('room-input').value, 
                 sender_id: user_id,
+                user_type: 'customer',
+                user_type_id: customer_id,
                 socket_id: socket.id,
-                chat_message_type: 'image',
+                chat_message_type: 'text',
+                receiver_id: 28,
+                receiver_device_token: 'zkbiaR8bI-2u_cAFAAAD',
               });
             }
 
@@ -282,19 +296,13 @@
         text: message, 
         activity_id: activity_id ?? document.getElementById('room-input').value, 
         sender_id: user_id,
+        user_type_id: customer_id,
         user_type: 'customer',
         socket_id: socket.id,
+        receiver_id: 28,
+        receiver_device_token: 'zkbiaR8bI-2u_cAFAAAD',
       });
 
-      // socket.emit('message_sent', 
-      // { 
-      //   text: message,
-      //   room_id: document.getElementById('room-input').value,
-      //   sender_id: user_id,
-      //   receiver_id: receiver_id,
-      //   sender_name: 'Hafij '+Math.floor(Math.random() * 10),
-      //   sender_image: "http://192.168.1.209/roketanswer/storage/file_upload/168967876087091792.png"
-      // });
       
     });
   </script>
