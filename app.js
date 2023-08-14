@@ -26,6 +26,11 @@ const io = new Server(server, {
   connectTimeout: 5000,
   pingTimeout: 5000,
   pingInterval: 5000,
+  cookie: false,
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
 // io.adapter(createAdapter());

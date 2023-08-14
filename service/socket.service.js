@@ -215,9 +215,9 @@ io.on(tag.CONNECTION, (socket) => {
   //   actions.MessageSent(payload);
   // });
 
-  // socket.on(tag.MESSAGE_SENT_GP, (payload) => {
-  //   actions.MessageSentGp(payload);
-  // });
+  socket.on(tag.MESSAGE_SENT_GP, (payload) => {
+    actions.MessageSentGp(payload);
+  });
 
   // io.on(tag.GET_MESSAGE, (payload) => {
   //   console.log('GET_MESSAGE listening: ', payload);
