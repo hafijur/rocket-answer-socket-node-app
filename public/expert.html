@@ -14,7 +14,13 @@
     <button id="join-button">Give Conversation Code</button>
     
   </div>
-  <button id="get-sessions">Get Sessions</button>
+
+  <!-- show activity list -->
+  <div id="activity-list-div">
+    <ul id="activity-list"></ul>
+  </div>
+
+  <!-- <button id="get-sessions">Get Sessions</button> -->
   <div id="chat-area" style="display: none;">
     <ul id="messages"></ul>
     <form id="chat-form" action="">
@@ -34,7 +40,7 @@
     let expert_id = params.get("expert_id") ?? 17;
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
-    let activity_id = params.get("activity_id") ?? null;
+    let activity_id = params.get("activity_id") ?? 15;
     console.log("questions",JSON.parse(questions));
 
 
@@ -78,7 +84,11 @@
           user_id: user_id,
           user_type: 'expert',
           expert_id: expert_id,
+          // category_id: 1,
           socket_id: socket.id,
+        },(error) => {
+          console.log(error);
+          alert(error);
         });
       
       document.getElementById('room-form').style.display = 'none';
@@ -86,30 +96,6 @@
     }
       
 
-    if(user_id && questions) {
-
-      const answers = JSON.parse(questions);
-      // console.log("answers",answers);
-      let des = "";
-      answers.forEach((answer, index) => {
-        // last index check
-        if (index === answers.length - 1) {
-          des += `${answer.answer}`;
-          
-        }else{
-          des += `${answer.answer} , `;
-        }
-      });
-
-
-      createActivity({
-        title: 'Looking for good family Lawyer',
-        description: des,
-        questions: questions ,
-
-      });
-
-    }
 
     function onTyping() {
       // console.log('typing');
@@ -137,24 +123,22 @@
     });
 
 
-    document.getElementById('get-sessions').addEventListener('click', () => {
-      socket.emit('refresh_sessions');
-    });
-
-
-  
-
-
     socket.on('connect', () => {
-      console.log('Connected to the server.');
         socket.emit('online', { 
           user_id: user_id, 
           account_type: 'personal', 
           socket_id: socket.id,
           last_seen: new Date(),
           device_token :"zkbiaR8bI-2u_cAFAAAD",
-
       });
+
+      socket.emit('get_my_sessions', {
+        user_id: user_id,
+        user_type: 'expert',
+        category_id: 1,
+      });
+
+
 
     });
 
@@ -168,7 +152,24 @@
       console.log('user joined message', message);
     });
 
+
+
     socket.on('sessions', (message) => {
+
+      // print activity to activity div
+      document.getElementById('activity-list').innerHTML = '';
+      for (let i = 0; i < message.length; i++) {
+        const li = document.createElement('li');
+        // add anchor tag with activity id
+        const a = document.createElement('a');
+        a.href = '/expert.html?activity_id='+message[i].id;
+        a.textContent = message[i].title + ' - ' + message[i].id;
+
+        li.appendChild(a);
+        document.getElementById('activity-list').appendChild(li);
+      }
+
+
 
       console.log('sessions', message);
     });
@@ -202,13 +203,7 @@
     socket.on('disconnect', () => {
       console.log('Disconnected from the server.');
     });
-    // Handle incoming chat messages
-    // socket.on('chat message', (message) => {
-    //   const li = document.createElement('li');
-    //   li.textContent = message.message+ ' - ' + message.room;
-    //   console.log('chat message', message);
-    //   document.getElementById('messages').appendChild(li);
-    // });
+
 
     socket.on('recent_chat', (message) => {
       console.log('recent_chat message', message);
@@ -263,8 +258,12 @@
                 text: result.data.file_url, 
                 activity_id: activity_id ?? document.getElementById('room-input').value, 
                 sender_id: user_id,
+                user_type: 'expert',
+                user_type_id: expert_id,
                 socket_id: socket.id,
                 chat_message_type: 'image',
+                receiver_id: 30,
+                receiver_device_token: 'zkbiaR8bI-2u_cAFAAAD',
               });
             }
 
@@ -285,8 +284,11 @@
         text: message, 
         activity_id: activity_id ?? document.getElementById('room-input').value, 
         sender_id: user_id,
-        user_type: 'customer',
+        user_type: 'expert',
+        user_type_id: expert_id,
         socket_id: socket.id,
+        receiver_id: 30,
+        receiver_device_token: 'zkbiaR8bI-2u_cAFAAAD',
       });
 
       // socket.emit('message_sent', 

@@ -49,7 +49,7 @@ class Notification {
   }
 
   async sendTopicNotificaion(payload) {
-    console.log('hitting into notification----------------');
+    console.log('hitting into topic notification----------------',payload);
     try {
       const { topic, title, body } = payload;
 

@@ -32,26 +32,22 @@ async function ActivityJoined(payload) {
 
   const sent_at = Date.now();
 
-  const activityInfo = await db.select('*').from('jp_activity').where('activity_id', activity_id);
-  // console.log("------------------Activity Info--------------------------", activityInfo[0].title);
-  if (!activityInfo || activityInfo[0].is_closed) {
+  const activityInfo = await db.select('*').from('conversations')
+    .where('id', activity_id).first();
+  if (!activityInfo) {
     return;
   }
-  if (user_id == null) {
-    Error('user_id is null');
-  }
-  // console.log("Activity Info", activityInfo);
 
   if (status === "join") {
     // console.log(`\nuser joining in ActivityJoined action\n`);
     await db
-      .table("jp_activity")
+      .table("conversations")
       .update({
-        expert_id: user_type === "expert" ? user_id : activityInfo[0].expert_id,
-        customer_id: user_type === "customer" ? user_id : activityInfo[0].customer_id,
+        expert_id: user_type === "expert" ? user_id : activityInfo.expert_id,
+        customer_id: user_type === "customer" ? user_id : activityInfo.customer_id,
 
       })
-      .where("activity_id", activity_id);
+      .where("id", activity_id);
     if (recent_attendants.length > 2) {
       recent_attendants.pop();
     }
@@ -62,7 +58,6 @@ async function ActivityJoined(payload) {
 
     if (!$data.length) {
       try {
-        
         await db
           .table("jp_activity_attendant")
           .insert({
@@ -71,10 +66,10 @@ async function ActivityJoined(payload) {
             accepted: 1,
             icon_url: profile_picture,
             version: 1,
-  
+
           });
       } catch (error) {
-         console.log("activity_joined.action-77 ",error);
+        console.log("activity_joined.action-77 ", error);
       }
     }
 
@@ -128,14 +123,13 @@ async function ActivityJoined(payload) {
     //   [activity_id, user_id]
     // );
     const chatList = await db.select('*')
-      .from('jp_group_chat_message')
-      .where('activity_id', activity_id)
+      .from('conversation_details')
+      .where('conversation_id', activity_id)
 
-      .orderBy('group_message_id', 'desc')
-      // .orderBy('group_message_id', 'desc');
-    // console.log("Chat List", chatList);
+      .orderBy('id', 'desc');
 
     io.to(socket_id).emit('chat_m', chatList);
+
 
     if (privacy === "private") {
       // io.emit(tag.GET_MESSAGE_GP, {
@@ -171,7 +165,6 @@ async function ActivityJoined(payload) {
     // console.log(`\nuser leaving in ActivityJoined action\n`);
 
     if (recent_attendants.includes(joined_user_image)) {
-      console.log(`\nLeaving user joined recently\n`);
       // recent_attendants = recent_attendants.filter((image) => image !== joined_user_image);
 
       await db

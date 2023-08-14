@@ -101,7 +101,7 @@ async function FileUploadedGp(payload) {
     sockets.push(senderInfo[0].socket_id);
   }
 
-  io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
+  // io.to(sockets).emit(tag.RECENT_CHAT, recentMessagePayload);
 }
 
 module.exports = FileUploadedGp;

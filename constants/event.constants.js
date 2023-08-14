@@ -47,4 +47,6 @@ module.exports = {
   START_CONVERSATION_BY_CONVERSATION_CODE: "start_conversation_by_conversation_code",
   SESSIONS: "sessions",
   REFRESH_SESSIONS: "refresh_sessions",
+  ONLINE_EXPERTS: "online_experts",
+  GET_ONLINE_EXPERTS: "get_online_experts",
 };
