@@ -1,5 +1,7 @@
 const dbService = require("../service/db.service");
 const db = require("../service/db.service");
+const GetCatWiseSessionsList = require("./get_cat_wise_sessions_list.action");
+const GetMySessions = require("./get_my_sessions.action");
 
 /**
  * User online event
@@ -22,10 +24,11 @@ async function Online(payload) {
       .update({ device_token: payload.device_token })
       .where('id', payload.user_id);
     const foundUser = await
-    db.select('jp_user_online.user_id').from('jp_user_online')
+    db.select('jp_user_online.user_id', 'jp_user_online.category_id').from('jp_user_online')
     // .innerJoin('users', 'jp_user_online.user_id', 'users.id')
       .where('jp_user_online.user_id', payload.user_id).first();
 
+    console.log('found user is ', foundUser, 'payload is ', payload?.socket_id);
 
     if (foundUser) {
       await db
@@ -57,6 +60,11 @@ async function Online(payload) {
         category_name: payload?.category_name,
         subcategory_id: payload?.subcategory_id,
       });
+    }
+    if (foundUser && foundUser.category_id !== null) {
+      console.log('found user category id is ', foundUser.category_id);
+      payload.category_id = foundUser.category_id;
+      GetMySessions(payload);
     }
   } catch (error) {
     console.log("\nFailed to register user\n", error);

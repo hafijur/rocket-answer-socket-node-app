@@ -49,7 +49,7 @@ class Notification {
   }
 
   async sendTopicNotificaion(payload) {
-    console.log('hitting into topic notification----------------',payload);
+    console.log('hitting into topic notification----------------', payload);
     try {
       const { topic, title, body } = payload;
 
@@ -82,10 +82,9 @@ class Notification {
       );
     } catch (error) {
       // console.log(error);
-      console.log("Failed to send notification",error);
+      console.log("Failed to send notification", error);
     }
   }
-
 }
 
 module.exports = Notification;

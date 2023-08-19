@@ -91,13 +91,13 @@ io.on(tag.CONNECTION, (socket) => {
   //   }
   // });
 
-  socket.on(`typing`, (data) => {
-    if (socketRooms.has(socket)) {
-      const room = socketRooms.get(socket);
-      console.log(`Broadcasting message to room: ${room}`);
-      io.to(room).emit(`typing`, data);
-    }
-  });
+  // socket.on(`typing`, (data) => {
+  //   if (socketRooms.has(socket)) {
+  //     const room = socketRooms.get(socket);
+  //     console.log(`Broadcasting message to room: ${room}`);
+  //     io.to(room).emit(`typing`, data);
+  //   }
+  // });
 
   /** ********************
   * end of new code
@@ -117,6 +117,7 @@ io.on(tag.CONNECTION, (socket) => {
       user_id: payload.user_id,
       last_seen: Date.now(),
       account_type: payload.account_type,
+      user_type: payload?.user_type,
       online_status: "active",
     };
 
@@ -130,6 +131,7 @@ io.on(tag.CONNECTION, (socket) => {
   });
 
   socket.on(tag.ACTIVITY_CREATED, async (payload) => {
+    console.log('activity created payload ', payload);
 
     const notificationService = new Notification();
 
@@ -137,44 +139,48 @@ io.on(tag.CONNECTION, (socket) => {
       title: payload.title,
       body: payload.description,
       topic: payload.topic,
-      type: "notify_new_request",
-
+      activity_id: payload?.activity_id,
+      type: "asking_zone",
     };
 
-    console.log('notification payload',notificationPayload);
+    console.log('notification payload', notificationPayload);
 
     notificationService.sendTopicNotificaion(notificationPayload);
 
-    io.emit(tag.NOTIFY_ACTIVITY, payload);
+    // io.emit(tag.NOTIFY_ACTIVITY, payload);
     actions.GetCatWiseSessionsList(payload);
   });
 
   socket.on(tag.REFRESH_SESSIONS, async (payload) => {
+    console.log('refresh calling with ', payload);
     actions.GetSessions(payload);
   });
 
   socket.on(tag.ACTIVITY_JOINED, (payload, error) => {
     // console.log('Activity joined', payload);
-    actions.ActivityJoined(payload);
-    actions.GetCatWiseSessionsList(payload);
+    // actions.ActivityJoined(payload);
+    // actions.GetCatWiseSessionsList(payload);
     dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
       // actions.ActivityJoined(payload);
       // actions.GetCatWiseSessionsList(payload);
-      // if(payload.user_type === 'expert') {
-      // }
-      // if (payload.user_type === 'customer') {
-      //   if (res.customer_id == null || payload.user_id === res.customer_id) {
-      //     error("Already joined a customer");
-      //   } else {
-      //     actions.ActivityJoined(payload);
-      //   }
-      // } else if (payload.user_type === 'expert') {
-      //   if (res.expert_id == null || payload.user_id === res.expert_id) {
-      //     actions.ActivityJoined(payload);
-      //   } else {
-      //     error("Already joined an expert");
-      //   }
-      // }
+
+      console.log('join res is ', res);
+
+      if (payload.user_type === 'customer') {
+        if (payload.user_id === res.customer_id || res.customer_id == null) {
+          error("Already joined a customer");
+        } else {
+          actions.ActivityJoined(payload);
+          actions.GetCatWiseSessionsList(payload);
+        }
+      } else if (payload.user_type === 'expert') {
+        if (payload.user_id === res.expert_id || res.expert_id == null) {
+          actions.ActivityJoined(payload);
+          actions.GetCatWiseSessionsList(payload);
+        } else {
+          error("Already joined an expert");
+        }
+      }
     });
   });
 
@@ -216,6 +222,7 @@ io.on(tag.CONNECTION, (socket) => {
   // });
 
   socket.on(tag.MESSAGE_SENT_GP, (payload) => {
+    console.log('MESSAGE_SENT_GP', payload);
     actions.MessageSentGp(payload);
   });
 

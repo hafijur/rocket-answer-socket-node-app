@@ -15,7 +15,9 @@ async function GetMySessions(payload) {
       .whereNull('expert_id')
       .orderBy('id', 'desc');
     console.log('get my sessions socket is ', payload?.socket_id);
-    io.to(payload.socket_id).emit("sessions", activities);
+    if (payload?.category_id != null) {
+      io.to(payload.socket_id).emit(tag.SESSIONS, activities);
+    }
   } catch (error) {
     console.log(error);
   }

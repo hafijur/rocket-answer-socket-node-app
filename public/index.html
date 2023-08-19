@@ -34,6 +34,7 @@
     let receiver_id = params.get("receiver_id") ?? 2;
     let questions = params.get("questions") ?? null;
     let activity_id = params.get("activity_id") ?? null;
+    let category_id = params.get("category_id") ?? 1;
 
     function createActivity(data) {
 
@@ -52,13 +53,14 @@
           socket.emit('activity_created',{
             title: data?.title,
             description: data.description,
-            topic:'expert_1',
-            category_id: 3,
+            activity_id: result?.data,
+            topic:'category_'+(data.category_id),
+            category_id: data.category_id,
             user_type: 'customer',
             user_id: user_id,
           });
           console.log('Success:', result);
-          window.location.href = `/customer.html?user_id=${user_id}&activity_id=`+result.data; 
+          window.location.href = `/customer.html?user_id=${user_id}&activity_id=`+result.data+`&category_id=${category_id}`; 
         })
         .catch(error => {
           console.error('Error:', error);
@@ -105,9 +107,9 @@
         title: 'Looking for good family Lawyer',
         description: des,
         questions: questions ,
-        expert_category_id: 3,
+        expert_category_id: category_id,
         expert_sub_category_id: 2,
-        customer_id:30,
+        customer_id:user_id,
         price: 1500
 
       });

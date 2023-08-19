@@ -9,10 +9,15 @@ const { io } = require("../app");
 async function GetCatWiseOnlineList(payload) {
   // console.log('GetCatWiseOnlineList socket is ', payload);
   try {
-    const online_users = await db.count('user_online_id as total').from('jp_user_online')
-    .where('online_status', 'active')
-    .first();
-    io.to(payload.socket_id).emit(tag.ONLINE_EXPERTS, online_users.total);
+    if (payload?.category_id != null) {
+      const online_users = await db.count('user_online_id as total').from('jp_user_online')
+        .where('online_status', 'active')
+        .where('category_id', payload?.category_id)
+        .first();
+      io.to(payload.socket_id).emit(tag.ONLINE_EXPERTS, online_users.total);
+    } else {
+      io.to(payload.socket_id).emit(tag.ONLINE_EXPERTS, 0);
+    }
   } catch (error) {
     console.log(error);
   }
