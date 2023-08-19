@@ -157,28 +157,24 @@ io.on(tag.CONNECTION, (socket) => {
   });
 
   socket.on(tag.ACTIVITY_JOINED, (payload, error) => {
-    // console.log('Activity joined', payload);
-    // actions.ActivityJoined(payload);
-    // actions.GetCatWiseSessionsList(payload);
+    console.log('activity joined payload ', payload);
     dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
-      // actions.ActivityJoined(payload);
-      // actions.GetCatWiseSessionsList(payload);
-
       console.log('join res is ', res);
-
-      if (payload.user_type === 'customer') {
-        if (payload.user_id === res.customer_id || res.customer_id == null) {
-          error("Already joined a customer");
-        } else {
-          actions.ActivityJoined(payload);
-          actions.GetCatWiseSessionsList(payload);
-        }
-      } else if (payload.user_type === 'expert') {
-        if (payload.user_id === res.expert_id || res.expert_id == null) {
-          actions.ActivityJoined(payload);
-          actions.GetCatWiseSessionsList(payload);
-        } else {
-          error("Already joined an expert");
+      if (res !== undefined) {
+        if (payload.user_type === 'customer') {
+          if (payload.user_id === res.customer_id || res.customer_id == null) {
+            error("Already joined a customer");
+          } else {
+            actions.ActivityJoined(payload);
+          // actions.GetCatWiseSessionsList(payload);
+          }
+        } else if (payload.user_type === 'expert') {
+          if (payload.user_id === res.expert_id || res.expert_id == null) {
+            actions.ActivityJoined(payload);
+          // actions.GetCatWiseSessionsList(payload);
+          } else {
+            error("Already joined an expert");
+          }
         }
       }
     });

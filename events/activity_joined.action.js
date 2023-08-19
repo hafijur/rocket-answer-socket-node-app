@@ -48,30 +48,51 @@ async function ActivityJoined(payload) {
 
       })
       .where("id", activity_id);
-    if (recent_attendants.length > 2) {
-      recent_attendants.pop();
+
+    let session_sockets = [];
+    const category_id = activityInfo.expert_category_id;
+    console.log('category_id', category_id);
+    if (category_id != null) {
+      session_sockets = await db.select('user_online_id').from('jp_user_online')
+      // .where('online_status', 'active')
+        .where('category_id', category_id)
+        .pluck('socket_id');
     }
+    console.log('calling session from activity joined');
+    const activities = await db.select('*')
+      .from('conversations')
+      .where('expert_category_id', activityInfo.expert_category_id)
+      .andWhere('is_customer_closed', false)
+      .andWhere('is_expert_closed', false)
+      .whereNull('expert_id')
+      .orderBy('id', 'desc');
+    console.log('sessions socket is ', session_sockets, 'activities', activities.length);
+    io.to(session_sockets).emit(tag.SESSIONS, activities);
 
-    const $data = await db.select('*').from('jp_activity_attendant')
-      .where('activity_id', activity_id)
-      .where('user_id', user_id);
+    // if (recent_attendants.length > 2) {
+    //   recent_attendants.pop();
+    // }
 
-    if (!$data.length) {
-      try {
-        await db
-          .table("jp_activity_attendant")
-          .insert({
-            activity_id,
-            user_id,
-            accepted: 1,
-            icon_url: profile_picture,
-            version: 1,
+    // const $data = await db.select('*').from('jp_activity_attendant')
+    //   .where('activity_id', activity_id)
+    //   .where('user_id', user_id);
 
-          });
-      } catch (error) {
-        console.log("activity_joined.action-77 ", error);
-      }
-    }
+    // if (!$data.length) {
+    //   try {
+    //     await db
+    //       .table("jp_activity_attendant")
+    //       .insert({
+    //         activity_id,
+    //         user_id,
+    //         accepted: 1,
+    //         icon_url: profile_picture,
+    //         version: 1,
+
+    //       });
+    //   } catch (error) {
+    //     console.log("activity_joined.action-77 ", error);
+    //   }
+    // }
 
     if (privacy === 'public') {
       // await db
@@ -129,7 +150,6 @@ async function ActivityJoined(payload) {
       .orderBy('id', 'desc');
 
     io.to(socket_id).emit('chat_m', chatList);
-
 
     if (privacy === "private") {
       // io.emit(tag.GET_MESSAGE_GP, {

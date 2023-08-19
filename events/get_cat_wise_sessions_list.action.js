@@ -35,6 +35,7 @@ async function GetCatWiseSessionsList(payload) {
       .orderBy('id', 'desc');
     console.log('sessions socket is ', session_sockets);
     io.to(session_sockets).emit(tag.SESSIONS, activities);
+    console.log('from get cat wise sessions', activities.length);
   } catch (error) {
     console.log(error);
   }

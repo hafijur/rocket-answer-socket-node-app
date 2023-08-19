@@ -82,22 +82,26 @@ app.get("/test", async (req, res) => {
   // let data = await db.select('user_online_id').from('jp_user_online').where('online_status', 'active').where('category_id', 1).pluck('socket_id')
   // res.json(data);
 
-  const foundUser = await
-    db.select('jp_user_online.user_id').from('jp_user_online')
-      .where('jp_user_online.user_id', 30).first()
-      res.json({
-        user : foundUser
-});
+  const foundUser = await db.select('*')
+    .from('conversations')
+    .where('expert_category_id', 1)
+    .andWhere('is_expert_closed', false)
+    .andWhere('is_customer_closed', false)
+    .whereNull('expert_id')
+    .orderBy('id', 'desc');
+  res.json({
+    foundUser
+  });
 
-    // .then((data) => {
-    //   res.json(data);
-    // })
-    // .catch((err) => {
-    //   console.log(err);
-    //   res.json({
-    //     message: `Database Connection error${err.message}`
-    //   });
-    // });
+  // .then((data) => {
+  //   res.json(data);
+  // })
+  // .catch((err) => {
+  //   console.log(err);
+  //   res.json({
+  //     message: `Database Connection error${err.message}`
+  //   });
+  // });
 });
 
 app.post("/create_activity", async (req, res) => {
