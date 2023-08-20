@@ -49,4 +49,6 @@ module.exports = {
   REFRESH_SESSIONS: "refresh_sessions",
   ONLINE_EXPERTS: "online_experts",
   GET_ONLINE_EXPERTS: "get_online_experts",
+  ERROR: "error",
+  SUCCESS: "success",
 };

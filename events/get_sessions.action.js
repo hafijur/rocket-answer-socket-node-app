@@ -13,7 +13,7 @@ async function GetSessions(socket = null) {
       .andWhere('is_expert_closed', false)
       .whereNull('expert_id')
       .orderBy('id', 'desc');
-    console.log('sessions socket is ', socket);
+    console.log('GetSessions sessions socket is ', socket);
     io.emit("sessions", activities);
   } catch (error) {
     console.log(error);

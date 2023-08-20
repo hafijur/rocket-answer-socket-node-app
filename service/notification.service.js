@@ -10,6 +10,7 @@ class Notification {
 
   async send(payload) {
     try {
+      console.log('hitting into notification----------------', payload);
       const { fcm_token, multiple, title, body } = payload;
 
       const notification = {
@@ -44,7 +45,7 @@ class Notification {
       // console.log(`notification sent to ${fcm_token}\n Token--${this.token}`);
     } catch (error) {
       // console.log(error);
-      console.log("Failed to send notification");
+      console.log("Failed to send notification", error);
     }
   }
 

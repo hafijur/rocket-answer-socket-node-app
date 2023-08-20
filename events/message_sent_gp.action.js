@@ -40,6 +40,20 @@ async function MessageSentGp(payload) {
       senderType = 2;
       receiverType = 1;
     }
+
+    const activityInfo = await dbService.select(["*"]).from("conversations").where({ id: activity_id });
+    const activityAttendant = await dbService.select(["user_id"]).from("jp_activity_attendant").where({ activity_id });
+
+    if (activityInfo.length > 0) {
+      // console.log('working here', sender_id, activityInfo[0].expert_id, activityInfo[0].customer_id);
+      if (user_type === 'expert' && activityInfo[0].expert_id != sender_id) {
+        return;
+      }
+      if (user_type === 'customer' && activityInfo[0].customer_id != sender_id) {
+        return;
+      }
+    }
+
     const newMessage = await dbService
       .table("conversation_details")
       .insert({
@@ -55,23 +69,20 @@ async function MessageSentGp(payload) {
         created_at: MyTime.getDateTime(),
         // status: "sent",
         chat_message_type,
-        // owner: "",
+      // owner: "",
       });
-
-    const activityInfo = await dbService.select(["*"]).from("conversations").where({ id: activity_id });
-    const activityAttendant = await dbService.select(["user_id"]).from("jp_activity_attendant").where({ activity_id });
 
     if (!Object.keys(activityInfo).length) {
       return;
     }
 
-    // await dbService.table('notifications').insert({
-    //   type: 1,
-    //   expert_id: activityInfo[0]?.expert_id,
-    //   conversation_id: activityInfo[0]?.id,
-    //   title: 'New message has been added',
-    //   body: text
-    // });
+    await dbService.table('notifications').insert({
+      type: 1,
+      expert_id: activityInfo[0]?.expert_id,
+      conversation_id: activityInfo[0]?.id,
+      title: 'New message has been added',
+      body: text
+    });
 
     const activity_users = await dbService.select('*').table('jp_user_online')
       .whereIn('user_id', [activityInfo[0]?.customer_id, activityInfo[0]?.expert_id]);
@@ -80,10 +91,12 @@ async function MessageSentGp(payload) {
     activity_users.forEach((user) => {
       activity_user_sockets.push(user.socket_id);
     });
-    console.log('found sockets are ', activity_user_sockets);
     io.to(activity_user_sockets).emit(tag.GET_MESSAGE_GP, payload);
 
-    const alter_user = activity_users.filter((user) => user.user_id !== sender_id);
+    console.log('sender id ', sender_id);
+    const alter_user = activity_users.filter((user) => user.user_id != sender_id);
+
+    // console.log('alter user is ', alter_user);
 
     const notificationService = new Notification();
 
@@ -98,8 +111,10 @@ async function MessageSentGp(payload) {
       sender_id,
       multiple: false,
       chat_message_type: "text",
-      message_id: newMessage[0].single_message_id,
+      message_id: newMessage[0]?.id,
     };
+
+    console.log('notification payload is ', notificationPayload);
 
     notificationService.send(notificationPayload);
 

@@ -28,7 +28,7 @@ async function Online(payload) {
     // .innerJoin('users', 'jp_user_online.user_id', 'users.id')
       .where('jp_user_online.user_id', payload.user_id).first();
 
-    console.log('found user is ', foundUser, 'payload is ', payload?.socket_id);
+    // console.log('found user is ', foundUser, 'payload is ', payload?.socket_id);
 
     if (foundUser) {
       await db
@@ -62,7 +62,7 @@ async function Online(payload) {
       });
     }
     if (foundUser && foundUser.category_id !== null) {
-      console.log('found user category id is ', foundUser.category_id);
+      console.log('online: found user category id is ', foundUser.category_id);
       payload.category_id = foundUser.category_id;
       GetMySessions(payload);
     }

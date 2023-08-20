@@ -169,7 +169,6 @@ app.post("/customer_create_activity", async (req, res) => {
       question_answers: req.body.questions
     });
 
-  console.log('working here--------------------');
 
   io.emit('activity_created', {
     title: "Good luck",

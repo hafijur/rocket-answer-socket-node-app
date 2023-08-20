@@ -7,7 +7,7 @@ const { io } = require("../app");
  * @param {{activity_id: number}} payload
  */
 async function GetCatWiseSessionsList(payload) {
-  console.log('GetCatWiseSessionsList payload', payload);
+  // console.log('GetCatWiseSessionsList payload', payload);
   let category_id = null;
   if (payload?.category_id) {
     category_id = payload.category_id;
@@ -33,7 +33,7 @@ async function GetCatWiseSessionsList(payload) {
       .andWhere('is_expert_closed', false)
       .whereNull('expert_id')
       .orderBy('id', 'desc');
-    console.log('sessions socket is ', session_sockets);
+    console.log('cat wise sessions socket is ', session_sockets);
     io.to(session_sockets).emit(tag.SESSIONS, activities);
     console.log('from get cat wise sessions', activities.length);
   } catch (error) {
