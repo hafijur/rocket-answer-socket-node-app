@@ -228,12 +228,12 @@ io.on(tag.CONNECTION, (socket) => {
   //   io.emit(tag.GET_MESSAGE_GP, payload);
   // });
 
-  // socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
-  //   // console.log(`SET_VIEW_MESSAGE_GP`);
+  socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
+    console.log(`SET_VIEW_MESSAGE_GP`);
   //   // console.log(payload);
-  //   actions.MessageViewedGp(payload);
-  //   io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
-  // });
+    actions.MessageViewedGp(payload);
+    io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
+  });
 
   // socket.on(tag.SET_REMOVE_JOIN_REQUEST, (payload) => {
   //   // console.log(`SET_REMOVE_JOIN_REQUEST`);

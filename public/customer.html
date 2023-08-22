@@ -9,6 +9,7 @@
 </head>
 <body>
   <h1>Socket Chat</h1>
+  <button id="set_view_message_gp">Message view gp</button>
   <div id="room-form">
     <input id="room-input" placeholder="Enter room name" autocomplete="off" />
     <button id="join-button">Give Conversation Code</button>
@@ -101,7 +102,7 @@
       // console.log("answers",answers);
       let des = "";
       answers.forEach((answer, index) => {
-        // last index check
+        // last index checkjoin-button
         if (index === answers.length - 1) {
           des += `${answer.answer}`;
           
@@ -234,6 +235,14 @@
 
     socket.on('chat_m', (message) => {
       console.log('chat_m message', message);
+    });
+
+    document.getElementById('set_view_message_gp').addEventListener('click', () => {
+      socket.emit('set_view_message_gp', {
+        conversation_id: activity_id,  
+        id: 31,
+        receiver_id: 30,
+      }); 
     });
 
     // Handle form submission

@@ -19,7 +19,7 @@ const MyTime = require("../service/my_time.service");
  */
 
 async function MessageSentGp(payload) {
-  // console.log(`\nMessageSent Payload ----`, payload);
+  console.log(`\nMessageSent Payload ----`, payload);
   try {
     const {
       text,
@@ -42,18 +42,19 @@ async function MessageSentGp(payload) {
     }
 
     const activityInfo = await dbService.select(["*"]).from("conversations").where({ id: activity_id });
-    const activityAttendant = await dbService.select(["user_id"]).from("jp_activity_attendant").where({ activity_id });
+    // const activityAttendant = await dbService.select(["user_id"]).from("jp_activity_attendant").where({ activity_id });
 
     if (activityInfo.length > 0) {
-      // console.log('working here', sender_id, activityInfo[0].expert_id, activityInfo[0].customer_id);
-      if (user_type === 'expert' && activityInfo[0].expert_id != sender_id) {
+      console.log('working here', sender_id, activityInfo[0].expert_id, activityInfo[0].customer_id, user_type);
+      if (user_type == 'expert' && activityInfo[0].expert_id != sender_id) {
+        console.log('working here expert not matched');
         return;
       }
-      if (user_type === 'customer' && activityInfo[0].customer_id != sender_id) {
+      if (user_type == 'customer' && activityInfo[0].customer_id != sender_id) {
         return;
       }
     }
-
+    console.log('working here 2');
     const newMessage = await dbService
       .table("conversation_details")
       .insert({
@@ -76,14 +77,6 @@ async function MessageSentGp(payload) {
       return;
     }
 
-    await dbService.table('notifications').insert({
-      type: 1,
-      expert_id: activityInfo[0]?.expert_id,
-      conversation_id: activityInfo[0]?.id,
-      title: 'New message has been added',
-      body: text
-    });
-
     const activity_users = await dbService.select('*').table('jp_user_online')
       .whereIn('user_id', [activityInfo[0]?.customer_id, activityInfo[0]?.expert_id]);
 
@@ -91,9 +84,42 @@ async function MessageSentGp(payload) {
     activity_users.forEach((user) => {
       activity_user_sockets.push(user.socket_id);
     });
-    io.to(activity_user_sockets).emit(tag.GET_MESSAGE_GP, payload);
 
-    console.log('sender id ', sender_id);
+    const newPayload = {
+      ...payload,
+      id: newMessage[0]?.id,
+    };
+
+    io.to(activity_user_sockets).emit(tag.GET_MESSAGE_GP, newPayload);
+
+    if (user_type === 'customer') {
+      const $found_notification = await dbService.table('notifications').where({
+        type: 1,
+        expert_id: activityInfo[0]?.expert_id,
+        conversation_id: activityInfo[0]?.id,
+      }).first();
+
+      if ($found_notification) {
+        await dbService.table('notifications').where({
+          type: 1,
+          expert_id: activityInfo[0]?.expert_id,
+          conversation_id: activityInfo[0]?.id,
+        }).update({
+          seen_total: false,
+          updated_at: MyTime.getDateTime()
+        });
+      } else {
+        await dbService.table('notifications').insert({
+          type: 1,
+          expert_id: activityInfo[0]?.expert_id,
+          conversation_id: activityInfo[0]?.id,
+          title: 'New message has been added',
+          body: text
+        });
+      }
+    }
+
+    // console.log('sender id ', sender_id);
     const alter_user = activity_users.filter((user) => user.user_id != sender_id);
 
     // console.log('alter user is ', alter_user);
@@ -114,7 +140,7 @@ async function MessageSentGp(payload) {
       message_id: newMessage[0]?.id,
     };
 
-    console.log('notification payload is ', notificationPayload);
+    // console.log('notification payload is ', notificationPayload);
 
     notificationService.send(notificationPayload);
 
