@@ -86,9 +86,11 @@ async function MessageSentGp(payload) {
     });
 
     const newPayload = {
+      id: newMessage[0],
       ...payload,
-      id: newMessage[0]?.id,
     };
+
+    console.log('new payload is ', newPayload);
 
     io.to(activity_user_sockets).emit(tag.GET_MESSAGE_GP, newPayload);
 
