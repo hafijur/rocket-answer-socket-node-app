@@ -77,8 +77,11 @@ async function MessageSentGp(payload) {
       return;
     }
 
+    const ids = [activityInfo[0]?.customer_id, activityInfo[0]?.expert_id].filter((id) => id != null);
+    console.log('activity attendant user ids ', ids);
+
     const activity_users = await dbService.select('*').table('jp_user_online')
-      .whereIn('user_id', [activityInfo[0]?.customer_id, activityInfo[0]?.expert_id]);
+      .whereIn('user_id', ids);
 
     const activity_user_sockets = [];
     activity_users.forEach((user) => {
@@ -90,7 +93,7 @@ async function MessageSentGp(payload) {
       ...payload,
     };
 
-    console.log('new payload is ', newPayload);
+    console.log('activity_attendant sockets', activity_user_sockets);
 
     io.to(activity_user_sockets).emit(tag.GET_MESSAGE_GP, newPayload);
 
