@@ -155,25 +155,14 @@ io.on(tag.CONNECTION, (socket) => {
     // actions.GetSessions(payload);
   });
 
-  socket.on(tag.ACTIVITY_JOINED, (payload, error) => {
+  socket.on(tag.ACTIVITY_JOINED, (payload) => {
+    socket.join(payload.activity_id);
+    socketRooms.set(socket, payload.activity_id);
     console.log('activity joined payload ', payload);
     dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
       console.log('join res is ', res);
       if (res !== undefined) {
         actions.ActivityJoined(payload);
-        // if (payload.user_type === 'customer') {
-        //   if (payload.user_id == res.customer_id || res.customer_id == null) {
-        //     error("Already joined a customer");
-        //   } else {
-        //     actions.ActivityJoined(payload);
-        //   }
-        // } else if (payload.user_type === 'expert') {
-        //   if (payload.user_id == res.expert_id || res.expert_id == null) {
-        //     actions.ActivityJoined(payload);
-        //   } else {
-        //     error("Already joined an expert");
-        //   }
-        // }
       }
     });
   });
@@ -220,6 +209,13 @@ io.on(tag.CONNECTION, (socket) => {
     actions.MessageSentGp(payload);
   });
 
+  socket.on('activity_closed_by_expert', async (payload) => {
+    console.log('activity_closed_by_expert', payload);
+    const receiver_socket = await dbService.select('socket_id').from('jp_user_online').where('user_id', payload.receiver_id).first();
+    console.log('activity_closed_by_expert receiver socket ', receiver_socket);
+    io.to(receiver_socket.socket_id).emit('activity_closed_by_expert', payload);
+  });
+
   // io.on(tag.GET_MESSAGE, (payload) => {
   //   console.log('GET_MESSAGE listening: ', payload);
   // });
@@ -230,7 +226,7 @@ io.on(tag.CONNECTION, (socket) => {
 
   socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
     console.log(`SET_VIEW_MESSAGE_GP`);
-  //   // console.log(payload);
+    //   // console.log(payload);
     actions.MessageViewedGp(payload);
     io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
   });

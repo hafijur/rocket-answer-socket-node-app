@@ -26,7 +26,7 @@ async function MessageSentGp(payload) {
       activity_id,
       sender_id,
       user_type = "customer" || "expert",
-      chat_message_type,
+      chat_message_type = 'text',
       receiver_id = null
     } = payload;
 
@@ -95,9 +95,9 @@ async function MessageSentGp(payload) {
 
     console.log('activity_attendant sockets', activity_user_sockets);
 
-    io.to(activity_user_sockets).emit(tag.GET_MESSAGE_GP, newPayload);
+    io.to(activity_id).emit(tag.GET_MESSAGE_GP, newPayload);
 
-    if (user_type === 'customer') {
+    if (user_type == 'customer') {
       const $found_notification = await dbService.table('notifications').where({
         type: 1,
         expert_id: activityInfo[0]?.expert_id,

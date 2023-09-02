@@ -51,4 +51,5 @@ module.exports = {
   GET_ONLINE_EXPERTS: "get_online_experts",
   ERROR: "error",
   SUCCESS: "success",
+  EXPERT_ALL_PENDING_SESSIONS: "expert_all_pending_sessions",
 };
