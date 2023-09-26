@@ -2,6 +2,7 @@
 const { io } = require("../app");
 const tag = require("../constants/event.constants");
 const db = require("../service/db.service");
+const my_timeService = require("../service/my_time.service");
 
 /**
  * add newly joined user to recent_attendants array
@@ -45,6 +46,8 @@ async function ActivityJoined(payload) {
       .update({
         expert_id: user_type === "expert" ? user_id : activityInfo.expert_id,
         customer_id: user_type === "customer" ? user_id : activityInfo.customer_id,
+        start_time: (activityInfo.start_time == null && user_type === "expert") ? my_timeService.getTime() : null,
+        expert_reply_date: (activityInfo.date == null && user_type === "expert") ? my_timeService.getDate() : null 
 
       })
       .where("id", activity_id);

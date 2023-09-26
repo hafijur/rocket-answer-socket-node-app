@@ -13,10 +13,25 @@ const questions = [
   'How old are you?'
 ];
 
-io.on(tag.CONNECTION, (socket) => {
+io.on(tag.CONNECTION, async (socket) => {
   // console.log(socket);
-  console.log(`Socket connected on ${socket.id}`);
+  const { type } = socket.handshake.query;
+  console.log(`Socket connected on ${socket.id} | type: ${type}`);
+
+  if (type === 'admin') {
+    actions.GetAllPendingSessions();
+  }
+
   // actions.GetSessions(socket);
+
+  socket.on('joinRoom', (room) => {
+    socket.join(room);
+    console.log(`User joined room: ${room}`);
+  });
+
+  socket.on('sendMessage', (room, message) => {
+    io.to(room).emit('message', message);
+  });
 
   function askQuestion(index) {
     if (index >= questions.length) {
@@ -148,6 +163,7 @@ io.on(tag.CONNECTION, (socket) => {
 
     // io.emit(tag.NOTIFY_ACTIVITY, payload);
     actions.GetCatWiseSessionsList(payload);
+    actions.GetAllPendingSessions();
   });
 
   socket.on(tag.REFRESH_SESSIONS, async (payload) => {
@@ -156,13 +172,29 @@ io.on(tag.CONNECTION, (socket) => {
   });
 
   socket.on(tag.ACTIVITY_JOINED, (payload) => {
+    console.log('activity joined payload ', payload);
     socket.join(payload.activity_id);
     socketRooms.set(socket, payload.activity_id);
-    console.log('activity joined payload ', payload);
     dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
       console.log('join res is ', res);
       if (res !== undefined) {
         actions.ActivityJoined(payload);
+        console.log('before calling get my sessions');
+        actions.GetAllPendingSessions();
+        console.log('after calling get my sessions');
+        // if (payload.user_type === 'customer') {
+        //   if (payload.user_id == res.customer_id || res.customer_id == null) {
+        //     error("Already joined a customer");
+        //   } else {
+        //     actions.ActivityJoined(payload);
+        //   }
+        // } else if (payload.user_type === 'expert') {
+        //   if (payload.user_id == res.expert_id || res.expert_id == null) {
+        //     actions.ActivityJoined(payload);
+        //   } else {
+        //     error("Already joined an expert");
+        //   }
+        // }
       }
     });
   });

@@ -94,6 +94,7 @@ async function MessageSentGp(payload) {
     };
 
     console.log('activity_attendant sockets', activity_user_sockets);
+    console.log('sending to activity------------------------------------- ',activity_id);
 
     io.to(activity_id).emit(tag.GET_MESSAGE_GP, newPayload);
 
