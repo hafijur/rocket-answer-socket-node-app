@@ -1,10 +1,9 @@
 {
-  "name": "japyo-socket",
+  "name": "rocket-answer-chat",
   "version": "1.0.0",
-  "description": "socket server for japyo",
+  "description": "chatting with socket io for rocket answer",
   "main": "server.js",
-  "repository": "https://github.com/azad71/japyo-socket.git",
-  "author": "azad71",
+  "author": "Md Hafijur Rahman",
   "license": "MIT",
   "private": true,
   "scripts": {
