@@ -1,5 +1,5 @@
 const { server, app } = require("./app");
-
+require('dotenv').config();
 const appConfig = require("./config/app.config");
 const db = require("./service/db.service");
 const { io } = require("./app");
@@ -11,13 +11,11 @@ const PORT = process.env.PORT || appConfig.PORT;
 require("./service/socket.service");
 
 app.get("/test", async (req, res) => {
-
   const receiver_socket = await db.select('socket_id').from('jp_user_online').where('user_id', 28).first();
 
   res.json({
     receiver_socket: receiver_socket.socket_id
   });
-
 });
 
 app.post("/create_activity", async (req, res) => {
@@ -85,7 +83,6 @@ app.post("/customer_create_activity", async (req, res) => {
       description: req.body.description,
       question_answers: req.body.questions
     });
-
 
   io.emit('activity_created', {
     title: "Good luck",

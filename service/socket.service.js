@@ -1,5 +1,4 @@
 const { io } = require("../app");
-
 const actions = require("../events");
 const tag = require("../constants/event.constants");
 const Notification = require('./notification.service');
@@ -14,7 +13,6 @@ const questions = [
 ];
 
 io.on(tag.CONNECTION, async (socket) => {
-  // console.log(socket);
   const { type } = socket.handshake.query;
   console.log(`Socket connected on ${socket.id} | type: ${type}`);
 
@@ -95,27 +93,6 @@ io.on(tag.CONNECTION, async (socket) => {
     console.log(`User joined room: ${room}`);
   });
 
-  // Handle incoming chat messages
-  // socket.on('chat message', (data) => {
-  //   if (socketRooms.has(socket)) {
-  //     const room = socketRooms.get(socket);
-  //     console.log(`Broadcasting message to room: ${room}`);
-
-  //     io.to(room).emit('chat message', data);
-  //   }
-  // });
-
-  // socket.on(`typing`, (data) => {
-  //   if (socketRooms.has(socket)) {
-  //     const room = socketRooms.get(socket);
-  //     console.log(`Broadcasting message to room: ${room}`);
-  //     io.to(room).emit(`typing`, data);
-  //   }
-  // });
-
-  /** ********************
-  * end of new code
-  *********************** */
 
   socket.on(tag.ONLINE, (payload) => {
     socket.user_id = payload.user_id;
@@ -199,42 +176,6 @@ io.on(tag.CONNECTION, async (socket) => {
     });
   });
 
-  // socket.on(tag.GROUP_JOINED, (payload) => {
-  //   actions.GroupJoined(payload);
-  // });
-
-  // socket.on(tag.CREATE_SURPRISE_ACTIVITY, (payload) => {
-  //   actions.StartSurpriseActivity(payload);
-  // });
-
-  // socket.on(tag.INVITE_PARTICIPANT, (payload) => {
-  //   actions.InviteParticipant(payload);
-  // });
-
-  // socket.on(tag.JOIN_SURPRISE_ACTIVITY, (payload) => {
-  //   actions.JoinSurpriseActivity(payload);
-  // });
-
-  // socket.on(tag.CREATE_SURPRISE_POLL, (payload) => {
-  //   io.emit(tag.NOTIFY_SURPRISE_POLL, payload);
-  // });
-
-  // socket.on(tag.VOTE_ACTIVITY, (payload) => {
-  //   actions.VoteActivity(payload);
-  // });
-
-  // socket.on(tag.SURPRISE_ACTIVITY_ENDED, (payload) => {
-  //   actions.SurpriseActivityEnded(payload);
-  // });
-
-  // socket.on(tag.ACTIVITY_CANCELLED, (payload) => {
-
-  //   io.emit(tag.NOTIFY_ACTIVITY_CANCELLED, payload);
-  // });
-
-  // socket.on(tag.MESSAGE_SENT, (payload) => {
-  //   actions.MessageSent(payload);
-  // });
 
   socket.on(tag.MESSAGE_SENT_GP, (payload) => {
     console.log('MESSAGE_SENT_GP', payload);
@@ -248,48 +189,12 @@ io.on(tag.CONNECTION, async (socket) => {
     io.to(receiver_socket.socket_id).emit('activity_closed_by_expert', payload);
   });
 
-  // io.on(tag.GET_MESSAGE, (payload) => {
-  //   console.log('GET_MESSAGE listening: ', payload);
-  // });
-
-  // socket.on(tag.SET_MESSAGE_GP, (payload) => {
-  //   io.emit(tag.GET_MESSAGE_GP, payload);
-  // });
 
   socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
     console.log(`SET_VIEW_MESSAGE_GP`);
     //   // console.log(payload);
     actions.MessageViewedGp(payload);
     io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
-  });
-
-  // socket.on(tag.SET_REMOVE_JOIN_REQUEST, (payload) => {
-  //   // console.log(`SET_REMOVE_JOIN_REQUEST`);
-  //   // console.log(payload);
-  //   io.emit(tag.GET_REMOVE_JOIN_REQUEST, payload);
-  // });
-
-  // socket.on(tag.MESSAGE_VIEWED, (payload) => {
-  //   // console.log(`user_id:${payload.receiver_id} viewed user_id:${payload.sender_id} message_id:${payload.message_id}`);
-  //   // console.log(`\nCaught ${tag.MESSAGE_VIEWED} event with payload: ${JSON.stringify(payload)}\n`);
-  //   actions.MessageViewed(payload);
-  // });
-
-  socket.on(tag.UPLOAD_FILE, (payload) => {
-    console.log("upload file event fired---", payload);
-    // console.log(`\nCaught ${tag.UPLOAD_FILE} event with payload: ${JSON.stringify(payload)}\n`);
-
-    actions.FileUploaded(payload);
-  });
-
-  socket.on(tag.UPLOAD_FILE_GP, (payload) => {
-    console.log("upload file event fired---", payload);
-    actions.FileUploadedGp(payload);
-  });
-
-  socket.on(tag.USER_ACCEPT_JOIN_REQUEST, (payload) => {
-    console.log("USER ACCEPT JOIN REQUEST event fired---", payload);
-    actions.UserAcceptJoinRequest(payload);
   });
 
   socket.on(tag.FORCE_DISCONNECT, () => {

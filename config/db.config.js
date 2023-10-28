@@ -1,13 +1,9 @@
-module.exports = {
-  DB_HOST: "24.199.122.48",
-  DB_USERNAME: "rocket_remote",
-  DB_PASSWORD: "rocket_answer_db123",
-  DB_PORT: 3306,
-  DB_NAME: "rockte_answer",
+require('dotenv').config();
 
-  // DB_HOST: "127.0.0.1",
-  // DB_USERNAME: "root",
-  // DB_PASSWORD: "12345678",
-  // DB_PORT: 3306,
-  // DB_NAME: "roket_answer_2",
+module.exports = {
+  DB_HOST: process.env.DB_HOST,
+  DB_USERNAME: process.env.DB_USERNAME,
+  DB_PASSWORD: process.env.DB_PASSWORD,
+  DB_PORT: process.env.DB_PORT,
+  DB_NAME: process.env.DB_NAME,
 };

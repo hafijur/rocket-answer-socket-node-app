@@ -1,8 +1,9 @@
+require('dotenv').config();
+
 module.exports = {
-  PORT: 5005,
-  NOTIFICATION_URL: "https://fcm.googleapis.com/fcm/send",
-  NOTIFICATION_TOKEN:
-    "key=AAAAUW_Uf9A:APA91bEaFxcMpmfTvBpnZJ1uRvOGxuhhOTqeeLDHFeSFmLQ6oA343W27K6St-_JmjG7R2GgAENGDOBI-iH3qaJa0RVUqNY6IQj55N3JUg43tk7qpiQHiNCVNzNgrbUtrO8HnmNg7HmY5",
-  ACTIVITY_DURATION: 1000 * 60 * 15,
-  PHOTO_BASE_PATH:"http://24.199.122.48/backend/storage",
+  PORT: 5000,
+  NOTIFICATION_URL: process.env.NOTIFICATION_URL,
+  NOTIFICATION_TOKEN: process.env.NOTIFICATION_TOKEN,
+  ACTIVITY_DURATION: process.env.ACTIVITY_DURATION,
+  PHOTO_BASE_PATH: process.env.PHOTO_BASE_PATH,
 };

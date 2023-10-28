@@ -1,7 +1,7 @@
 const knex = require("knex");
 const dbConfig = require("../config/db.config");
 
-// console.log(process.env.NODE_ENV);
+console.log(process.env.NODE_ENV);
 
 const node_env = process.env.NODE_ENV || "production";
 
