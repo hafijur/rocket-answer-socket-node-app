@@ -18,7 +18,7 @@ const MyTime = require("../service/my_time.service");
  */
 
 async function MessageSentGp(payload) {
-  console.log(`\nMessageSent Payload ----`, payload);
+  // console.log(`\nMessageSent Payload ----`, payload);
   try {
     const {
       text,

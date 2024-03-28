@@ -68,6 +68,13 @@ io.on(tag.CONNECTION, async (socket) => {
     actions.GetCatWiseOnlineList(payload);
   });
 
+  // all events catch
+  socket.onAny((eventName, ...args) => {
+    console.log("Event Name", eventName); // 'hello'
+    console.log("Event Args", args); // [ 'world' ]
+    console.log("Event Socket", socket.id); // Socket { id: 'X', foo: 'bar' }
+  });
+
   // Handle client's answers
   socket.on('answer', (answer) => {
     const session = sessions.get(socket.id);
@@ -92,7 +99,6 @@ io.on(tag.CONNECTION, async (socket) => {
     socketRooms.set(socket, room);
     console.log(`User joined room: ${room}`);
   });
-
 
   socket.on(tag.ONLINE, (payload) => {
     socket.user_id = payload.user_id;
@@ -150,35 +156,35 @@ io.on(tag.CONNECTION, async (socket) => {
 
   socket.on(tag.ACTIVITY_JOINED, (payload) => {
     console.log('activity joined payload ', payload);
+    payload.socket_id = socket.id;
     socket.join(payload.activity_id);
     socketRooms.set(socket, payload.activity_id);
     dbService.table('conversations').where('id', payload.activity_id).first().then((res) => {
       console.log('join res is ', res);
       if (res !== undefined) {
-        actions.ActivityJoined(payload);
+        // actions.ActivityJoined(payload);
         console.log('before calling get my sessions');
-        actions.GetAllPendingSessions();
         console.log('after calling get my sessions');
-        // if (payload.user_type === 'customer') {
-        //   if (payload.user_id == res.customer_id || res.customer_id == null) {
-        //     error("Already joined a customer");
-        //   } else {
-        //     actions.ActivityJoined(payload);
-        //   }
-        // } else if (payload.user_type === 'expert') {
-        //   if (payload.user_id == res.expert_id || res.expert_id == null) {
-        //     actions.ActivityJoined(payload);
-        //   } else {
-        //     error("Already joined an expert");
-        //   }
-        // }
+        if (payload.user_type === 'customer') {
+          if (payload.user_id == res.customer_id || res.customer_id == null) {
+            actions.ActivityJoined(payload);
+          } else {
+            error("Already joined a customer");
+          }
+        } else if (payload.user_type === 'expert') {
+          if (payload.user_id == res.expert_id || res.expert_id == null) {
+            actions.ActivityJoined(payload);
+          } else {
+            error("Already joined an expert");
+          }
+        }
+        actions.GetAllPendingSessions();
       }
     });
   });
 
-
   socket.on(tag.MESSAGE_SENT_GP, (payload) => {
-    console.log('MESSAGE_SENT_GP', payload);
+    payload.socket_id = socket.id;
     actions.MessageSentGp(payload);
   });
 
@@ -189,10 +195,7 @@ io.on(tag.CONNECTION, async (socket) => {
     io.to(receiver_socket.socket_id).emit('activity_closed_by_expert', payload);
   });
 
-
   socket.on(tag.SET_VIEW_MESSAGE_GP, (payload) => {
-    console.log(`SET_VIEW_MESSAGE_GP`);
-    //   // console.log(payload);
     actions.MessageViewedGp(payload);
     io.emit(tag.GET_VIEW_MESSAGE_GP, payload);
   });
